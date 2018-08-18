@@ -132,12 +132,15 @@ footer {
   background-color: #e8d8c3;
 }
 
-.piece {
-  font-size: 2.5rem;
+.pieceWrapper {
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.piece {
+  height: 90%;
   cursor: pointer;
-  padding-bottom: 10%;
+  margin: auto;
 }

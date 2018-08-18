@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './style.css';
-import { PIECES, COLUMNS, RANKS } from './consts';
+
+import Piece from './Piece';
+import { COLUMNS, RANKS } from './consts';
 
 class Board extends Component {
   getFieldColour(rankIndex, columnIndex) {
@@ -36,6 +38,7 @@ class Board extends Component {
   }
   render() {
     const boardStatus = this.getBoardStatus();
+    const pieceStyle = 'cheq';
     return (
       <div className='board-wrapper'>
         <div className='rank-index-container'>
@@ -50,7 +53,8 @@ class Board extends Component {
                   key={`field-${ridx}-${cidx}`}
                   className={this.getFieldColour(ridx,cidx)}>
                   {boardStatus[ridx][cidx] !== '-' &&
-                    <div className='piece'>{PIECES[boardStatus[ridx][cidx]]}</div>}
+                    <Piece piece={boardStatus[ridx][cidx]} pieceStyle={pieceStyle} />
+                    }
                 </div>)}
             </div>)}
         </div>
