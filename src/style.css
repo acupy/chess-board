@@ -28,6 +28,29 @@ header, footer {
 header {
   top: 0;
   padding: 0px 20px 0px 20px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  display:inline-block;
+  float: left;
+}
+
+input, select {
+  border-radius: 10px;
+  height: 40px;
+  border: 2px solid #443a57;
+  margin: 20px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #443a57;
+  box-shadow: 2px 2px 10px 1px #282234;
+}
+
+header select {
+  float: right;
 }
 
 .content-container {
@@ -41,16 +64,8 @@ header {
 
 input {
   width: 400px;
-  border-radius: 10px;
-  height: 40px;
-  border: 2px solid #443a57;
   margin: 20px;
-  font-size: 15px;
-  font-weight: bold;
-  color: #443a57;
   padding: 5px;
-  box-shadow: 2px 2px 10px 1px #282234;
-  text-align: center;
 }
 
 footer {
@@ -79,7 +94,7 @@ footer {
   height: 90%;
 }
 
-.rank{
+.rank, .rank-index{
   height: 12.5%;
   display: flex;
 }
@@ -96,8 +111,6 @@ footer {
 }
 
 .rank-index {
-  height: 12.5%;
-  display: flex;
   justify-content: center;
   flex-direction: column;
   text-align: center;
@@ -111,15 +124,13 @@ footer {
 }
 
 .column-index {
-  height: 100%;
-  width: 12.5%;
   display: flex;
   justify-content: center;
   flex-direction: row;
   align-items: center;
 }
 
-.black-field, .white-field {
+.column-index, .black-field, .white-field {
   width: 12.5%;
   height: 100%;
 }
@@ -137,10 +148,10 @@ footer {
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: grab;
 }
 
 .piece {
   height: 90%;
-  cursor: pointer;
   margin: auto;
 }

@@ -38,7 +38,7 @@ class Board extends Component {
   }
   render() {
     const boardStatus = this.getBoardStatus();
-    const pieceStyle = 'cheq';
+    const { pieceStyle } = this.props;
     return (
       <div className='board-wrapper'>
         <div className='rank-index-container'>
