@@ -86,6 +86,7 @@ footer {
   background-color: #695a46;
   border: .5px solid #3f362a;
   box-shadow: 2px 2px 10px 1px #282234;
+  user-select: none;
 }
 
 .board {
