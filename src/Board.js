@@ -5,6 +5,12 @@ import Piece from './Piece';
 import { COLUMNS, RANKS } from './consts';
 
 class Board extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selected: [-1,-1],
+    };
+  }
   getFieldColour(rankIndex, columnIndex) {
     if ((rankIndex % 2) === 0) {
       return columnIndex % 2 === 1 ? 'black-field' : 'white-field';
@@ -18,6 +24,10 @@ class Board extends Component {
       fen = fen.replace(RegExp(num, 'g'), '-'.repeat(num));
     }
     return fen.split('/').map(item=>item.split(''));
+  }
+
+  selectPiece(rankIdx, columnIdx) {
+      this.setState({selected:[rankIdx, columnIdx]});
   }
 
   render() {
@@ -38,7 +48,12 @@ class Board extends Component {
                   key={`field-${ridx}-${cidx}`}
                   className={this.getFieldColour(ridx,cidx)}>
                   {boardStatus[ridx][cidx] !== '-' &&
-                    <Piece piece={boardStatus[ridx][cidx]} pieceStyle={pieceStyle} />
+                    <Piece
+                      piece={boardStatus[ridx][cidx]}
+                      pieceStyle={pieceStyle}
+                      isSelected={ridx === this.state.selected[0] && cidx === this.state.selected[1]}
+                      selectPiece={()=>this.selectPiece(ridx, cidx)}
+                    />
                     }
                 </div>)}
             </div>)}

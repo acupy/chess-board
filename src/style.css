@@ -144,12 +144,17 @@ footer {
   background-color: #e8d8c3;
 }
 
-.pieceWrapper {
+.selected-piece-wrapper, .piece-wrapper {
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: grab;
+  background-color: none;
+}
+
+.selected-piece-wrapper {
+  background-color: #55770055;
 }
 
 .piece {

@@ -9,13 +9,14 @@ class Piece extends Component {
   }
   clickHandler(event) {
       event.stopPropagation();
-      console.log(event.currentTarget);
-      event.currentTarget.style = 'background-color:#55770055;';
+      const { selectPiece } = this.props;
+      selectPiece();
+
   }
   render() {
-    const { piece, pieceStyle } = this.props;
+    const { piece, pieceStyle, isSelected } = this.props;
     return (
-      <div className='pieceWrapper' onMouseUp={this.clickHandler}>
+      <div className={isSelected ? 'selected-piece-wrapper':'piece-wrapper'} onMouseUp={this.clickHandler}>
         <img
           className='piece'
           src={`img/${pieceStyle}/${PIECES[piece]}`}
