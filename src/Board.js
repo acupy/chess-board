@@ -30,7 +30,13 @@ class Board extends Component {
   }
 
   selectPiece(rankIdx, columnIdx) {
-      this.setState({selected:[rankIdx, columnIdx]});
+    const { selected } = this.state;
+
+    if (selected[0] === rankIdx && selected[1] === columnIdx ) {
+      this.setState({selected:[-1, -1]}); // unselect
+    } else {
+      this.setState({selected:[rankIdx, columnIdx]}); //select
+    }
   }
 
   onClickEmptyField(rankIdx, columnIdx) {
