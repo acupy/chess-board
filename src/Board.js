@@ -66,7 +66,7 @@ class Board extends Component {
       boardStatus[rankIdx][columnIdx] = boardStatus[selected[0]][selected[1]];
       boardStatus[selected[0]][selected[1]] = '-';
 
-      return { boardStatus: boardStatus };
+      return { boardStatus: boardStatus, selected: [-1, -1] };
     });
   }
 
