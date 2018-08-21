@@ -9,6 +9,7 @@ class App extends Component {
     super(props);
 
     this.onFENChanged = this.onFENChanged.bind(this);
+    this.updateFEN = this.updateFEN.bind(this);
     this.onStyleChanged = this.onStyleChanged.bind(this);
 
     // Forsyth–Edwards Notation
@@ -27,6 +28,10 @@ class App extends Component {
       }
   }
 
+  updateFEN(fen) {
+    this.setState({textInput: fen});
+  }
+
   onStyleChanged(event) {
     this.setState({pieceStyle: event.target.value});
   }
@@ -43,7 +48,10 @@ class App extends Component {
       </header>
       <div className='content-container'>
         <input type='text' value={this.state.textInput} onChange={this.onFENChanged} />
-        <Board position={this.state.position} pieceStyle={this.state.pieceStyle} />
+        <Board
+          position={this.state.position}
+          pieceStyle={this.state.pieceStyle}
+          onUpdateBoard={this.updateFEN} />
       </div>
       <footer>2018</footer>
     </div>

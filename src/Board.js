@@ -40,6 +40,32 @@ class Board extends Component {
     return fen.split('/').map(item=>item.split(''));
   }
 
+  getFENFromBoard(boardStatus) {
+    let fen = '';
+
+    boardStatus.forEach((rank, rankIdx)=>{
+      let cnt = 0;
+      rank.forEach((field, fidx)=>{
+
+        if (cnt && field !== '-'){
+          fen += `${cnt}${field}`;
+          cnt = 0;
+        } else if(field === '-'){
+          cnt++;
+        } else {
+          fen += field;
+        }
+
+        if (fidx === 7 && cnt){
+          fen += `${cnt}`;
+        }
+
+      });
+      fen += rankIdx < 7 ? '/' : '';
+    });
+    return fen;
+  }
+
   selectPiece(rankIdx, columnIdx) {
     this.setState((prevState, props)=>{
       let newState = {};
@@ -65,6 +91,8 @@ class Board extends Component {
       // Move piece
       boardStatus[rankIdx][columnIdx] = boardStatus[selected[0]][selected[1]];
       boardStatus[selected[0]][selected[1]] = '-';
+
+      props.onUpdateBoard(this.getFENFromBoard(boardStatus));
 
       return { boardStatus: boardStatus, selected: [-1, -1] };
     });
