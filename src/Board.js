@@ -32,6 +32,7 @@ class Board extends Component {
 
   render() {
     const { position, pieceStyle } = this.props;
+    const { selected } = this.state;
     const boardStatus = this.getBoardFromFEN(position);
 
     return (
@@ -51,7 +52,7 @@ class Board extends Component {
                     <Piece
                       piece={boardStatus[ridx][cidx]}
                       pieceStyle={pieceStyle}
-                      isSelected={ridx === this.state.selected[0] && cidx === this.state.selected[1]}
+                      isSelected={ridx === selected[0] && cidx === selected[1]}
                       selectPiece={()=>this.selectPiece(ridx, cidx)}
                     />
                     }
