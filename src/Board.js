@@ -7,8 +7,11 @@ import { COLUMNS, RANKS } from './consts';
 class Board extends Component {
   constructor(props) {
     super(props);
+
+    this.onClickEmptyField = this.onClickEmptyField.bind(this);
+
     this.state = {
-      selected: [-1,-1],
+      selected: [-1,-1], // Invalid initial selection
     };
   }
   getFieldColour(rankIndex, columnIndex) {
@@ -30,6 +33,10 @@ class Board extends Component {
       this.setState({selected:[rankIdx, columnIdx]});
   }
 
+  onClickEmptyField(rankIdx, columnIdx) {
+    console.log(rankIdx, columnIdx);
+  }
+
   render() {
     const { position, pieceStyle } = this.props;
     const { selected } = this.state;
@@ -47,7 +54,9 @@ class Board extends Component {
               {rank.map((cell, cidx)=>
                 <div
                   key={`field-${ridx}-${cidx}`}
-                  className={this.getFieldColour(ridx,cidx)}>
+                  className={this.getFieldColour(ridx,cidx)}
+                  onClick={boardStatus[ridx][cidx] === '-' ?
+                    ()=>this.onClickEmptyField(ridx, cidx) : null}>
                   {boardStatus[ridx][cidx] !== '-' &&
                     <Piece
                       piece={boardStatus[ridx][cidx]}
@@ -55,7 +64,7 @@ class Board extends Component {
                       isSelected={ridx === selected[0] && cidx === selected[1]}
                       selectPiece={()=>this.selectPiece(ridx, cidx)}
                     />
-                    }
+                  }
                 </div>)}
             </div>)}
         </div>
