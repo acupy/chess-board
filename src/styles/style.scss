@@ -136,22 +136,21 @@ $BOARD_BORDER_COLOR: #3f362a;
 }
 
 .column-index-container {
-  width: 90%;
   display: flex;
   margin-left: 10%;
-  height: 10%;
+  align-items: center;
+  margin-top: 1%;
+  justify-content: center;
 }
 
 .column-index {
   display: flex;
   justify-content: center;
-  flex-direction: row;
   align-items: center;
 }
 
 .column-index, .black-field, .white-field {
   width: 12.5%;
-  height: 100%;
 }
 
 .black-field {
