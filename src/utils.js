@@ -1,7 +1,9 @@
 const validateFEN = (fen) => {
-    // TODO:: Only enfoces ranks
-    const regEx = '^([rnbqkpRNBQKP1-8]{1,8}/){7}([rnbqkpRNBQKP1-8]{1,8})$';
-    return fen.match(regEx);
+  for (let num=1; num<=8; num++) {
+    fen = fen.replace(RegExp(num, 'g'), '-'.repeat(num));
+  }
+  fen = fen.split('/').map(item=>item.split(''));
+  return fen.length === 8 && fen.every((item)=>item.length === 8);
 }
 
 export { validateFEN };
