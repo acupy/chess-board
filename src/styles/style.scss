@@ -4,6 +4,8 @@ $DARK_PURPLE_COLOR: #443a57;
 $DEEP_DARK_PURPLE_COLOR: #282234;
 $PALE_GREEN_COLOR: #55770055;
 
+$BOARD_SIZE: 400px;
+
 html {
   box-sizing: border-box;
 }
@@ -88,10 +90,9 @@ $BOARD_TEXT_COLOR: #2a241c;
 $BOARD_TEXT_SHADOW_COLOR: #e4d2ba;
 $BOARD_BACKGROUND_COLOR: #695a46;
 $BOARD_BORDER_COLOR: #3f362a;
-$BOARD_SIZE: 400px;
 
 .board-wrapper {
-  width: $BOARD_SIZE
+  width: $BOARD_SIZE;
   height: $BOARD_SIZE;
   font-family: Arial;
   color: $BOARD_TEXT_COLOR;
