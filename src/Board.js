@@ -12,33 +12,18 @@ class Board extends Component {
       return columnIndex % 2 === 0 ? 'black-field' : 'white-field';
     }
   }
-  getBoardStatus() {
-    const { position } = this.props;
-    const ranks = position.split(' ')[0].split('/');
-    let board = [];
-    ranks.forEach((rank, ridx)=>{
-      let rankFields = [];
-      rank.split('').forEach((field, fidx)=>{
-          if (isNaN(field)){
-            rankFields.push(field);
-          } else {
-            rankFields = rankFields.concat(Array(parseInt(field, 10)).fill('-'));
-          }
-      });
 
-      // TODO :: 8 columns and 8 ranks should be enforced by design
-      const emptyFields = 8 - rankFields.length;
-      if (emptyFields) {
-        rankFields = rankFields.concat(Array(emptyFields).fill('-'));
-      }
-
-      board.push(rankFields);
-    });
-    return board;
+  getBoardFromFEN(fen) {
+    for (let num=1; num<=8; num++) {
+      fen = fen.replace(RegExp(num, 'g'), '-'.repeat(num));
+    }
+    return fen.split('/').map(item=>item.split(''));
   }
+
   render() {
-    const boardStatus = this.getBoardStatus();
-    const { pieceStyle } = this.props;
+    const { position, pieceStyle } = this.props;
+    const boardStatus = this.getBoardFromFEN(position);
+
     return (
       <div className='board-wrapper'>
         <div className='rank-index-container'>
