@@ -92,6 +92,9 @@ $BOARD_BACKGROUND_COLOR: #695a46;
 $BOARD_BORDER_COLOR: #3f362a;
 
 .board-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
   width: $BOARD_SIZE;
   height: $BOARD_SIZE;
   font-family: Arial;
@@ -138,9 +141,9 @@ $BOARD_BORDER_COLOR: #3f362a;
 .column-index-container {
   display: flex;
   margin-left: 10%;
-  align-items: center;
-  margin-top: 1%;
   justify-content: center;
+  width: 100%;
+  height: 10%;
 }
 
 .column-index {
@@ -175,6 +178,6 @@ $BOARD_BORDER_COLOR: #3f362a;
 }
 
 .piece {
-  height: 90%;
+  height: 100%;
   margin: auto;
 }
