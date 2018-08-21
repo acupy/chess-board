@@ -17,6 +17,14 @@ class Board extends Component {
       boardStatus: this.getBoardFromFEN(position),
     };
   }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // Update when FEN is changed
+    if (prevProps.position !== this.props.position) {
+      this.setState({boardStatus: this.getBoardFromFEN(this.props.position)});
+    }
+  }
+
   getFieldColour(rankIndex, columnIndex) {
     if ((rankIndex % 2) === 0) {
       return columnIndex % 2 === 1 ? 'black-field' : 'white-field';
