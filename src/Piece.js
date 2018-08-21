@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import './style.css';
+import './styles/style.css';
 import { ALT_PIECES, PIECES } from './consts';
 
 class Piece extends Component {
