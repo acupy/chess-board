@@ -8,10 +8,13 @@ class Board extends Component {
   constructor(props) {
     super(props);
 
-    this.onClickEmptyField = this.onClickEmptyField.bind(this);
+    this.onClickMoveField = this.onClickMoveField.bind(this);
+
+    const { position } = this.props;
 
     this.state = {
       selected: [-1,-1], // Invalid initial selection
+      boardStatus: this.getBoardFromFEN(position),
     };
   }
   getFieldColour(rankIndex, columnIndex) {
@@ -30,23 +33,38 @@ class Board extends Component {
   }
 
   selectPiece(rankIdx, columnIdx) {
-    const { selected } = this.state;
-
-    if (selected[0] === rankIdx && selected[1] === columnIdx ) {
-      this.setState({selected:[-1, -1]}); // unselect
-    } else {
-      this.setState({selected:[rankIdx, columnIdx]}); //select
-    }
+    this.setState((prevState, props)=>{
+      let newState = {};
+      const { selected } = prevState;
+      if (selected[0] === rankIdx && selected[1] === columnIdx ) {
+        newState = {selected:[-1, -1]}; // unselect
+      } else {
+        newState = {selected:[rankIdx, columnIdx]}; //select
+      }
+      return newState;
+    });
   }
 
-  onClickEmptyField(rankIdx, columnIdx) {
-    console.log(rankIdx, columnIdx);
+  onClickMoveField(rankIdx, columnIdx) {
+    this.setState((prevState, props)=>{
+      const { selected, boardStatus } = prevState;
+      if (
+        (selected[0] === rankIdx && selected[1] === columnIdx) ||
+        (selected[0] === -1 || selected[1] === -1)
+      ) {
+        return {};
+      }
+      // Move piece
+      boardStatus[rankIdx][columnIdx] = boardStatus[selected[0]][selected[1]];
+      boardStatus[selected[0]][selected[1]] = '-';
+
+      return { boardStatus: boardStatus };
+    });
   }
 
   render() {
-    const { position, pieceStyle } = this.props;
-    const { selected } = this.state;
-    const boardStatus = this.getBoardFromFEN(position);
+    const { pieceStyle } = this.props;
+    const { selected, boardStatus } = this.state;
 
     return (
       <div className='board-wrapper'>
@@ -62,7 +80,7 @@ class Board extends Component {
                   key={`field-${ridx}-${cidx}`}
                   className={this.getFieldColour(ridx,cidx)}
                   onClick={boardStatus[ridx][cidx] === '-' ?
-                    ()=>this.onClickEmptyField(ridx, cidx) : null}>
+                    ()=>this.onClickMoveField(ridx, cidx) : null}>
                   {boardStatus[ridx][cidx] !== '-' &&
                     <Piece
                       piece={boardStatus[ridx][cidx]}
