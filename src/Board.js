@@ -100,7 +100,12 @@ class Board extends Component {
     });
   }
 
-  onRemoveSelectedPiece() {
+  onRemoveSelectedPiece(event) {
+
+    if(event.key !== 'Backspace') {
+      return;
+    }
+
     this.setState((prevState, props)=>{
       let newState = {};
       const { selected, boardStatus } = prevState;
