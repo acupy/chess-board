@@ -89,6 +89,10 @@ footer {
   user-select: none;
 }
 
+.board-wrapper:focus {
+  outline: 0px solid transparent;
+}
+
 .board {
   display: inline-block;
   width: 90%;

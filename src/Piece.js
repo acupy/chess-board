@@ -16,7 +16,9 @@ class Piece extends Component {
   render() {
     const { piece, pieceStyle, isSelected } = this.props;
     return (
-      <div className={isSelected ? 'selected-piece-wrapper':'piece-wrapper'} onMouseUp={this.clickHandler}>
+      <div
+        className={isSelected ? 'selected-piece-wrapper':'piece-wrapper'}
+        onMouseUp={this.clickHandler}>
         <img
           className='piece'
           src={`img/${pieceStyle}/${PIECES[piece]}`}

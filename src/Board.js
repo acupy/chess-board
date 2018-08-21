@@ -9,6 +9,8 @@ class Board extends Component {
     super(props);
 
     this.onClickMoveField = this.onClickMoveField.bind(this);
+    this.onRemoveSelectedPiece = this.onRemoveSelectedPiece.bind(this);
+    this.onLoseFocus = this.onLoseFocus.bind(this);
 
     const { position } = this.props;
 
@@ -98,12 +100,36 @@ class Board extends Component {
     });
   }
 
+  onRemoveSelectedPiece() {
+    this.setState((prevState, props)=>{
+      let newState = {};
+      const { selected, boardStatus } = prevState;
+      if (selected[0] !== -1 && selected[1] !== -1){
+        boardStatus[selected[0]][selected[1]] = '-';
+        newState = {
+          selected:[-1,-1],
+          boardStatus:boardStatus
+        };
+      }
+      props.onUpdateBoard(this.getFENFromBoard(boardStatus));
+      return newState;
+    });
+  }
+
+  onLoseFocus(event) {
+    this.setState({selected:[-1,-1]});
+  }
+
   render() {
     const { pieceStyle } = this.props;
     const { selected, boardStatus } = this.state;
 
     return (
-      <div className='board-wrapper'>
+      <div
+        className='board-wrapper'
+        onKeyDown={this.onRemoveSelectedPiece}
+        onBlur={this.onLoseFocus}
+        tabIndex='0'>
         <div className='rank-index-container'>
           {RANKS.map(ridx=>
             <div className='rank-index' key={`ridx-${ridx}`}>{ridx}</div>)}
