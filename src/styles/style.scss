@@ -1,7 +1,6 @@
 /* CSS COMPATIBILITY SETUP */
 
 $css4: true;
-$compatibility: true;
 
 /* GENERAL STYLES */
 $SMALL_BOARD_SIZE: 300px;
@@ -45,26 +44,6 @@ $gray_variables: (
   }
 }
 
-// the mixin temporally sets the $css4 variable to false, compiles the css3 fallback,
-// then makes the variable true again and compiles the css4 code. It should contain
-// properties that use css4 variables, otherwise there will be unnessesary duplication
-// of properties.
-
-@mixin css4 {
-  @if ($css4) {
-    $css4-backup: $css4;
-    @if($compatibility) {
-      $css4: false !global;
-      @content;
-    }
-    $css4: true !global;
-    @content;
-    $css4: $css4-backup;
-  }
-  @else {
-    @content;
-  }
-}
 
 html {
   box-sizing: border-box;
