@@ -3,32 +3,26 @@
 $css4: true;
 $compatibility: true;
 
-
 /* GENERAL STYLES */
+$SMALL_BOARD_SIZE: 300px;
+$MEDIUM_BOARD_SIZE: 400px;
+$BIG_BOARD_SIZE: 500px;
 
-$PALE_GREEN_COLOR: rgba(#557700, .5);
-
-// PURPLE THEME
-$DARK_PURPLE_COLOR: #443a57;
-$DEEP_DARK_PURPLE_COLOR: #282234;
-
-// DARK THEME
-$GRAY_COLOR: #a9a9a9;
-$BLACK_COLOR: black;
+// THEME STYLES
 
 // it is nessesary to define the variables in sass map instead of :root,
 // for compatibility reasons.
 $purple_variables: (
-  --header-bg: $DEEP_DARK_PURPLE_COLOR,
-  --background: $DARK_PURPLE_COLOR,
+  --header-bg: #282234,
+  --background: #443a57,
 );
 
 $gray_variables: (
---header-bg: $BLACK_COLOR,
---background: $GRAY_COLOR,
+--header-bg: black,
+--background: #a9a9a9,
 );
 
-//Here we transfer the variables from the map to the :root and :root.gray element
+//Here we transfer the variables from the map to the :root element
 @if($css4) {
   :root, :root.purple {
     @each $variable, $value in $purple_variables {
@@ -42,8 +36,7 @@ $gray_variables: (
   }
 }
 
-
-//this is the "magic" function
+// fallback for css variables
 @function var($variable) {
   @if($css4) {
     @return unquote('var(' + $variable + ')');
@@ -51,6 +44,11 @@ $gray_variables: (
     @return map-get($purple_variables, $variable);
   }
 }
+
+// the mixin temporally sets the $css4 variable to false, compiles the css3 fallback,
+// then makes the variable true again and compiles the css4 code. It should contain
+// properties that use css4 variables, otherwise there will be unnessesary duplication
+// of properties.
 
 @mixin css4 {
   @if ($css4) {
@@ -67,12 +65,6 @@ $gray_variables: (
     @content;
   }
 }
-
-
-$SMALL_BOARD_SIZE: 300px;
-$MEDIUM_BOARD_SIZE: 400px;
-$BIG_BOARD_SIZE: 500px;
-
 
 html {
   box-sizing: border-box;
@@ -165,6 +157,7 @@ $BOARD_BORDER_COLOR: #3f362a;
 $SMALL_BOARD_FONT_SIZE: 1.1rem;
 $MEDIUM_BOARD_FONT_SIZE: 1.2rem;
 $BIG_BOARD_FONT_SIZE: 1.3rem;
+$PALE_GREEN_COLOR: rgba(#557700, .5);
 
 .board-wrapper {
 
