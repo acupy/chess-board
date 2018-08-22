@@ -45,7 +45,7 @@ $gray_variables: (
   }
 }
 
-@mixin media-query($property, $small_value, $medium_value, $big_value){
+@mixin media($property, $small_value, $medium_value, $big_value){
   @media screen and (max-width: 640px){ #{$property}: $small_value; }
   @media screen and (min-width: 641px){ #{$property}: $medium_value; }
   @media screen and (min-width: 1024px){ #{$property}: $big_value; }
@@ -116,7 +116,7 @@ header select {
 }
 
 input {
-  @include media-query('width', $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
+  @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
   margin: 20px;
   padding: 5px;
 }
@@ -143,9 +143,9 @@ $BIG_BOARD_FONT_SIZE: 1.3rem;
 $PALE_GREEN_COLOR: rgba(#557700, .5);
 
 .board-wrapper {
-  @include media-query('width', $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
-  @include media-query('height', $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
-  @include media-query('font-size', $SMALL_BOARD_FONT_SIZE, $MEDIUM_BOARD_FONT_SIZE, $BIG_BOARD_FONT_SIZE);
+  @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
+  @include media(height, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
+  @include media(font-size, $SMALL_BOARD_FONT_SIZE, $MEDIUM_BOARD_FONT_SIZE, $BIG_BOARD_FONT_SIZE);
 
   display: flex;
   flex-wrap: wrap;
