@@ -31,25 +31,27 @@ header, footer {
   background-color: $DEEP_DARK_PURPLE_COLOR;
   right: 0;
   left: 0;
+  position: fixed;
 }
 
 header {
   top: 0;
-  position: fixed;
   padding: 0px 20px 0px 20px;
   display:flex;
   justify-content: space-between;
   align-items: center;
+  height: 45px;
 }
 
 header h1 {
   display:inline-block;
   float: left;
+  font-size: 20px;
 }
 
 input, select {
   border-radius: 10px;
-  height: 40px;
+  height: 30px;
   border: 2px solid $DARK_PURPLE_COLOR;
   margin: 20px;
   font-size: 15px;
@@ -63,7 +65,7 @@ header select {
 }
 
 .content-container {
-  margin-top: 100px;
+  margin-top: 50px;
   margin-bottom: 50px;
   display: flex;
   justify-content: center;
