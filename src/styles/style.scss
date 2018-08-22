@@ -48,7 +48,7 @@ $gray_variables: (
   @if($css4) {
     @return unquote('var(' + $variable + ')');
   } @else {
-    @return map-get($variables, $variable);
+    @return map-get($purple_variables, $variable);
   }
 }
 
