@@ -41,9 +41,9 @@ class App extends Component {
       <header>
         <h1>chess analyzer</h1>
         <select onChange={this.onStyleChanged}>
-          <option value='alpha'>Alpha</option>
-          <option value='cheq'>Cheq</option>
-          <option value='leipzig'>Leipzig</option>
+          <option value='alpha'>alpha</option>
+          <option value='cheq'>cheq</option>
+          <option value='leipzig'>leipzig</option>
         </select>
       </header>
       <div className='content-container'>
