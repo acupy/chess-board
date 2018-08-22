@@ -79,10 +79,9 @@ header, footer {
 header {
   top: 0;
   padding: 0px 20px 0px 20px;
-  display:flex;
-  justify-content: space-between;
+  display: flex;
   align-items: center;
-  height: 45px;
+  height: 80px;
 }
 
 header h1 {
@@ -91,23 +90,33 @@ header h1 {
   font-size: 20px;
 }
 
+.select-container {
+  margin-left: auto;
+}
+
+label {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 15px
+}
+
 input, select {
   border-radius: 10px;
   height: 30px;
   border: 2px solid var(--background);
-  margin: 20px;
   font-size: 15px;
   font-weight: bold;
   color: var(--background);
   box-shadow: 2px 2px 10px 1px var(--header-bg);
 }
 
-header select {
-  float: right;
+select {
+    margin-left: 5px;
 }
 
 .content-container {
-  margin-top: 50px;
+  margin-top: 80px;
   margin-bottom: 50px;
   display: flex;
   justify-content: center;
