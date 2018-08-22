@@ -4,7 +4,10 @@ $DARK_PURPLE_COLOR: #443a57;
 $DEEP_DARK_PURPLE_COLOR: #282234;
 $PALE_GREEN_COLOR: rgba(#557700, .5);
 
-$BOARD_SIZE: 400px;
+$SMALL_BOARD_SIZE: 350px;
+$MEDIUM_BOARD_SIZE: 400px;
+$BIG_BOARD_SIZE: 500px;
+
 
 html {
   box-sizing: border-box;
@@ -26,13 +29,13 @@ body {
 
 header, footer {
   background-color: $DEEP_DARK_PURPLE_COLOR;
-  position: fixed;
   right: 0;
   left: 0;
 }
 
 header {
   top: 0;
+  position: fixed;
   padding: 0px 20px 0px 20px;
   display:flex;
   justify-content: space-between;
@@ -69,7 +72,9 @@ header select {
 }
 
 input {
-  width: $BOARD_SIZE;
+  @media screen and (max-width: 640px){ width: $SMALL_BOARD_SIZE; }
+  @media screen and (min-width: 641px){ width: $MEDIUM_BOARD_SIZE; }
+  @media screen and (min-width: 1024px){ width: $BIG_BOARD_SIZE; }
   margin: 20px;
   padding: 5px;
 }
@@ -90,17 +95,36 @@ $BOARD_TEXT_COLOR: #2a241c;
 $BOARD_TEXT_SHADOW_COLOR: #e4d2ba;
 $BOARD_BACKGROUND_COLOR: #695a46;
 $BOARD_BORDER_COLOR: #3f362a;
+$SMALL_BOARD_FONT_SIZE: 1.1rem;
+$MEDIUM_BOARD_FONT_SIZE: 1.2rem;
+$BIG_BOARD_FONT_SIZE: 1.3rem;
 
 .board-wrapper {
+
+  @media screen and (max-width: 640px){
+    width: $SMALL_BOARD_SIZE;
+    height: $SMALL_BOARD_SIZE;
+    font-size: $SMALL_BOARD_FONT_SIZE;
+  }
+
+  @media screen and (min-width: 641px){
+    width: $MEDIUM_BOARD_SIZE;
+    height: $MEDIUM_BOARD_SIZE;
+    font-size: $MEDIUM_BOARD_FONT_SIZE;
+  }
+
+  @media screen and (min-width: 1024px){
+    width: $BIG_BOARD_SIZE;
+    height: $BIG_BOARD_SIZE;
+    font-size: $BIG_BOARD_FONT_SIZE;
+  }
+
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  width: $BOARD_SIZE;
-  height: $BOARD_SIZE;
   font-family: Arial;
   color: $BOARD_TEXT_COLOR;
   text-shadow: 0px 0px 1px $BOARD_TEXT_SHADOW_COLOR;
-  font-size: 1.2rem;
   background-color: $BOARD_BACKGROUND_COLOR;
   border: .5px solid $BOARD_BORDER_COLOR;
   box-shadow: 2px 2px 10px 1px $DEEP_DARK_PURPLE_COLOR;
