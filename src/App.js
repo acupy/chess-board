@@ -47,28 +47,30 @@ class App extends Component {
       <header>
         <h1>chess analyzer</h1>
         <div className='select-container'>
-          <label>piece style
-          <select onChange={this.onStyleChanged}>
-            <option value='alpha'>alpha</option>
-            <option value='cheq'>cheq</option>
-            <option value='leipzig'>leipzig</option>
-
-          </select>
-          </label>
-          <label>theme
           <select onChange={this.onThemeChanged}>
-            <option value='purple'>purple</option>
             <option value='gray'>gray</option>
+            <option value='purple'>purple</option>
           </select>
-          </label>
       </div>
       </header>
       <div className='content-container'>
-        <input type='text' value={this.state.textInput} onChange={this.onFENChanged} />
         <Board
           position={this.state.position}
           pieceStyle={this.state.pieceStyle}
           onUpdateBoard={this.updateFEN} />
+        <div className='config-panel'>
+          <div className='header-small'>Config</div>
+          <label>FEN 
+            <input type='text' value={this.state.textInput} onChange={this.onFENChanged} />
+          </label>
+          <label>Board style
+            <select onChange={this.onStyleChanged}>
+              <option value='alpha'>alpha</option>
+              <option value='cheq'>cheq</option>
+              <option value='leipzig'>leipzig</option>
+            </select>
+          </label>
+        </div>
       </div>
       <footer>2018</footer>
     </div>
