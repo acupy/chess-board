@@ -135,6 +135,11 @@ class Board extends Component {
         onKeyDown={this.onRemoveSelectedPiece}
         onBlur={this.onLoseFocus}
         tabIndex='0'>
+        <div className='column-index-container'>
+          {COLUMNS.map(cidx=>
+            <div className='column-index' key={`cidx-${cidx}`}>{cidx}</div>)}
+        </div>
+        <div className='sub-board-wrapper'>
         <div className='rank-index-container'>
           {RANKS.map(ridx=>
             <div className='rank-index' key={`ridx-${ridx}`}>{ridx}</div>)}
@@ -159,9 +164,6 @@ class Board extends Component {
                 </div>)}
             </div>)}
         </div>
-        <div className='column-index-container'>
-          {COLUMNS.map(cidx=>
-            <div className='column-index' key={`cidx-${cidx}`}>{cidx}</div>)}
         </div>
     </div>
     );
