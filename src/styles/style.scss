@@ -24,12 +24,12 @@ $gray_variables: (
 
 //Here we transfer the variables from the map to the :root element
 @if($css4) {
-  :root, :root.purple {
+  :root.purple {
     @each $variable, $value in $purple_variables {
       #{$variable}: $value;
     }
   }
-  :root.gray {
+  :root, :root.gray {
     @each $variable, $value in $gray_variables {
       #{$variable}: $value;
     }
@@ -81,7 +81,6 @@ header {
   padding: 0px 20px 0px 20px;
   display: flex;
   align-items: center;
-  height: 80px;
 }
 
 header h1 {
@@ -90,15 +89,22 @@ header h1 {
   font-size: 20px;
 }
 
+.header-small {
+  font-size: 18px;
+  font-weight: bold;
+}
+
 .select-container {
   margin-left: auto;
 }
 
 label {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  font-size: 15px
+  flex-wrap: wrap;
+  font-size: 14px;
+  flex-flow: column;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 input, select {
@@ -108,26 +114,17 @@ input, select {
   font-size: 15px;
   font-weight: bold;
   color: var(--background);
-  box-shadow: 2px 2px 10px 1px var(--header-bg);
-}
-
-select {
-    margin-left: 5px;
+  box-shadow: 2px 2px 10px -3px var(--header-bg);
 }
 
 .content-container {
-  margin-top: 80px;
+  margin-top: 60px;
   margin-bottom: 50px;
   display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  padding: 20px;
   justify-content: center;
-  flex-direction: column;
-  align-items: center;
-}
-
-input {
-  @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
-  margin: 20px;
-  padding: 5px;
 }
 
 footer {
@@ -181,6 +178,15 @@ $PALE_GREEN_COLOR: rgba(#557700, .5);
   display: inline-block;
   width: 80%;
   height: 90%;
+}
+
+.config-panel {
+  @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
+  @include media(height, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
+
+  background-color: rgba(235, 243, 255, 0.3);
+  box-shadow: 2px 2px 10px 1px var(--header-bg);
+  padding: 10px;
 }
 
 .rank, .rank-index{
