@@ -110,6 +110,8 @@ class Board extends Component {
     this.setState((prevState, props)=>{
       const { selected, boardStatus } = prevState;
    
+      if (selected[0] === -1 || selected[1] === -1) return;
+
       // Move piece
       boardStatus[rankIdx][columnIdx] = boardStatus[selected[0]][selected[1]];
       boardStatus[selected[0]][selected[1]] = '-';
