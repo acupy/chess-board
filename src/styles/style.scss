@@ -149,17 +149,22 @@ footer {
 
 /* BOARD STYLES */
 
-$DARK_FIELD_COLOR: #a89070;
-$LIGHT_FIELD_COLOR: #e8d8c3;
-$BOARD_TEXT_COLOR: #2a241c;
-$BOARD_TEXT_SHADOW_COLOR: #e4d2ba;
-$BOARD_BACKGROUND_COLOR: #695a46;
-$BOARD_BORDER_COLOR: #3f362a;
+// $DARK_FIELD_COLOR: #a89070;
+$DARK_FIELD_COLOR: #90816e;
+// $LIGHT_FIELD_COLOR: #e8d8c3;
+$LIGHT_FIELD_COLOR: #ffe8cb;
+// $BOARD_TEXT_COLOR: #2a241c;
+$BOARD_TEXT_COLOR: #5a544b;
+// $BOARD_TEXT_SHADOW_COLOR: #e4d2ba;
+$BOARD_TEXT_SHADOW_COLOR: #b5a794;
+// $BOARD_BACKGROUND_COLOR: #695a46;
+$BOARD_BACKGROUND_COLOR: #8c7659;
+// $BOARD_BORDER_COLOR: #3f362a;
+$BOARD_BORDER_COLOR: #8c7659;
 $SMALL_BOARD_FONT_SIZE: 1.1rem;
 $MEDIUM_BOARD_FONT_SIZE: 1.2rem;
 $BIG_BOARD_FONT_SIZE: 1.3rem;
-$PALE_GREEN_COLOR: rgba(#557700, .5);
-$DARK_GREEN_COLOR: rgba(#557700, .4);
+$PALE_GREEN_COLOR: rgba(#85a339, .5);
 $PALE_RED_COLOR: rgba(#501109, .7);
 
 .board-wrapper, .sub-board-wrapper {
@@ -192,6 +197,7 @@ $PALE_RED_COLOR: rgba(#501109, .7);
   display: inline-block;
   width: 80%;
   height: 90%;
+  // border: 1px solid #7d6733;
 }
 
 .config-panel-header {
@@ -285,9 +291,6 @@ $PALE_RED_COLOR: rgba(#501109, .7);
   height: 100%;
   width: 100%;
   cursor: cell;
-  // box-shadow:inset 1px 1px 1px 1px $DARK_GREEN_COLOR;
-  // -webkit-box-shadow:inset 1px 1px 1px 1px $DARK_GREEN_COLOR;
-  // -moz-box-shadow:inset 1px 1px 1px 1px  $DARK_GREEN_COLOR;
 }
 
 .selected-piece-wrapper, .allowed-field {
@@ -305,4 +308,8 @@ $PALE_RED_COLOR: rgba(#501109, .7);
 .piece {
   height: 100%;
   margin: auto;
+}
+
+.font-awesome-icon {
+  @include media(font-size, 22px, 30px, 36px);
 }

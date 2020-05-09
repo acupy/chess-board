@@ -20,7 +20,7 @@ class App extends Component {
     this.state = {
       textInput: startPosition,
       position: startPosition,
-      pieceStyle: 'alpha',
+      pieceStyle: 'fontAwesome',
       chessRulesEnforced: true,
       showConfig: false,
     };
@@ -84,9 +84,10 @@ class App extends Component {
             </label>
             <label>Board style
               <select onChange={this.onStyleChanged}>
-                <option value='alpha'>alpha</option>
-                <option value='cheq'>cheq</option>
-                <option value='leipzig'>leipzig</option>
+                <option value='fontAwesome' selected={this.state.pieceStyle === 'fontAwesome'}>Font Awesome</option>
+                <option value='alpha' selected={this.state.pieceStyle === 'alpha'}>alpha</option>
+                <option value='cheq' selected={this.state.pieceStyle === 'cheq'}>cheq</option>
+                <option value='leipzig' selected={this.state.pieceStyle === 'leipzig'}>leipzig</option>
               </select>
             </label>
             <label style={{flexFlow: 'row'}}>Enforce chess rules: 
