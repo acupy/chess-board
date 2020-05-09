@@ -8,7 +8,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChess,
   faCog,
-  faTimes
+  faTimes,
+  faSquare,
+  faCheckSquare
 } from '@fortawesome/free-solid-svg-icons';
 
 class App extends Component {
@@ -54,7 +56,7 @@ class App extends Component {
   }
 
   onChessRuleEnforcementChanged(event) {
-    this.setState({chessRulesEnforced: event.target.checked});
+    this.setState({chessRulesEnforced: !this.state.chessRulesEnforced});
   }
 
   onToggleConfig(event) {
@@ -110,10 +112,12 @@ class App extends Component {
               </select>
             </label>
             <label style={{flexFlow: 'row'}}>Enforce chess rules: 
-              <input 
-                type='checkbox' 
-                defaultChecked={this.state.chessRulesEnforced} 
-                onChange={this.onChessRuleEnforcementChanged}/>
+            <FontAwesomeIcon 
+              icon={this.state.chessRulesEnforced ? faCheckSquare : faSquare}
+              onClick={this.onChessRuleEnforcementChanged}
+              size='lg'
+              style={{marginLeft: '10px', cursor: 'pointer'}}
+            />
             </label>
           </div>
         </div>}
