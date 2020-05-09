@@ -12,6 +12,7 @@ class App extends Component {
     this.updateFEN = this.updateFEN.bind(this);
     this.onStyleChanged = this.onStyleChanged.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
+    this.onChessRuleEnforcementChanged = this.onChessRuleEnforcementChanged.bind(this);
 
     // Forsyth–Edwards Notation
     const startPosition = 'r1bqkbnr/pppp1ppp/8/1B2p3/3nP3/5N2/PPPP1PPP/RNBQK2R';
@@ -19,6 +20,7 @@ class App extends Component {
       textInput: startPosition,
       position: startPosition,
       pieceStyle: 'alpha',
+      chessRulesEnforced: false,
     };
   }
 
@@ -42,6 +44,10 @@ class App extends Component {
     root.className = event.target.value;
   }
 
+  onChessRuleEnforcementChanged(event) {
+    this.setState({chessRulesEnforced: event.target.checked});
+  }
+
   render() {
     return <div>
       <header>
@@ -57,7 +63,8 @@ class App extends Component {
         <Board
           position={this.state.position}
           pieceStyle={this.state.pieceStyle}
-          onUpdateBoard={this.updateFEN} />
+          chessRulesEnforced={this.state.chessRulesEnforced}
+          onBoardUpdated={this.updateFEN} />
         <div className='config-panel'>
           <div className='header-small'>Config</div>
           <label>FEN 
@@ -69,6 +76,12 @@ class App extends Component {
               <option value='cheq'>cheq</option>
               <option value='leipzig'>leipzig</option>
             </select>
+          </label>
+          <label style={{flexFlow: 'row'}}>Enforce chess rules: 
+            <input 
+              type='checkbox' 
+              defaultChecked={this.state.chessRulesEnforced} 
+              onChange={this.onChessRuleEnforcementChanged}/>
           </label>
         </div>
       </div>

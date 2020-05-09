@@ -18,8 +18,12 @@ const PIECES = {
   '-':''
 }
 
+const FIELD_AVAILABILITY = {
+  AVAILABLE: 1, HIT: 2, UNAVAILABLE: 0
+};
+
 const COLUMNS = ['A','B','C','D','E','F','G','H'];
 
 const RANKS = [1,2,3,4,5,6,7,8].reverse();
 
-export { PIECES, RANKS, COLUMNS, ALT_PIECES };
+export { PIECES, RANKS, COLUMNS, ALT_PIECES, FIELD_AVAILABILITY };
