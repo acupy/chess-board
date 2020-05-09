@@ -6,6 +6,7 @@ import Board from './Board';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
+  faChess,
   faCog,
   faTimes
 } from '@fortawesome/free-solid-svg-icons';
@@ -63,7 +64,15 @@ class App extends Component {
   render() {
     return <div>
       <header>
-        <h1>chess analyzer</h1>
+        
+        <h1>
+          <FontAwesomeIcon 
+            icon={faChess} 
+            size='lg' 
+            style={{marginRight: '14px'}} 
+          />
+          chess analyzer
+        </h1>
         <div className='select-container'>
           <select onChange={this.onThemeChanged}>
             <option value='gray'>gray</option>
