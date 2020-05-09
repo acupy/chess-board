@@ -81,6 +81,12 @@ header {
   padding: 0px 20px 0px 20px;
   display: flex;
   align-items: center;
+  .config-button {
+    font-size: 20px;
+    padding-left: 15px;
+    cursor: pointer;
+    
+  }
 }
 
 header h1 {
@@ -89,10 +95,10 @@ header h1 {
   font-size: 20px;
 }
 
-.header-small {
-  font-size: 18px;
-  font-weight: bold;
-}
+// .header-small {
+//   font-size: 18px;
+//   font-weight: bold;
+// }
 
 .select-container {
   margin-left: auto;
@@ -187,13 +193,28 @@ $PALE_RED_COLOR: rgba(#501109, .7);
   height: 90%;
 }
 
+.config-panel-header {
+  display: flex;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 5px;
+  .close-btn {
+    cursor: pointer;
+    margin-left: auto;
+  }
+}
+
 .config-panel {
   @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
   @include media(height, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
-
-  background-color: rgba(235, 243, 255, 0.3);
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 2px 2px 10px 1px var(--header-bg);
   padding: 10px;
+}
+
+.config-panel-body {
+  padding: 5px 20px ;
 }
 
 .rank, .rank-index{
