@@ -4,9 +4,9 @@
 $css4: true;
 
 /* GENERAL STYLES */
-$SMALL_BOARD_SIZE: 300px;
-$MEDIUM_BOARD_SIZE: 400px;
-$BIG_BOARD_SIZE: 500px;
+$SMALL_BOARD_SIZE: 400px;
+$MEDIUM_BOARD_SIZE: 500px;
+$BIG_BOARD_SIZE: 700px;
 
 // THEME STYLES
 
@@ -311,5 +311,5 @@ $PALE_RED_COLOR: rgba(#501109, .7);
 }
 
 .font-awesome-icon {
-  @include media(font-size, 22px, 30px, 36px);
+  @include media(font-size, 30px, 37px, 45px);
 }
