@@ -4,6 +4,12 @@ import './styles/style.css';
 import { validateFEN } from './utils';
 import Board from './Board';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faCog,
+  faTimes
+} from '@fortawesome/free-solid-svg-icons';
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -64,7 +70,9 @@ class App extends Component {
             <option value='purple'>purple</option>
           </select>
         </div>
-        <div className='config-button' onClick={this.onToggleConfig}>⚙️</div>
+        <div className='config-button' onClick={this.onToggleConfig}>
+          <FontAwesomeIcon icon={faCog} />
+        </div>
       </header>
       <div className='content-container'>
         <Board
@@ -76,7 +84,9 @@ class App extends Component {
         <div className='config-panel'>
           <div className='config-panel-header'>
             <div>Config</div>
-            <div className='close-btn' onClick={this.onToggleConfig}>✖️</div>
+            <div className='close-btn' onClick={this.onToggleConfig}>
+              <FontAwesomeIcon icon={faTimes} />
+            </div>
           </div>
           <div className='config-panel-body'>
             <label>FEN 
