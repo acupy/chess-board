@@ -177,6 +177,7 @@ $PALE_RED_COLOR: rgba(#501109, .7);
   background-color: $BOARD_BACKGROUND_COLOR;
   box-shadow: 2px 2px 10px 1px var(--header-bg);
   user-select: none;
+  border-radius: 10px;
 }
 
 .board-wrapper:focus {
