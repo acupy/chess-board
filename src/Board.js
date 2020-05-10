@@ -404,8 +404,10 @@ class Board extends Component {
                   </div>)}
               </div>)}
           </div>
+          <div className='rank-index-container'></div>
         </div>
-    </div>
+        <div className='column-index-container'></div>
+      </div>
     );
   }
 }
