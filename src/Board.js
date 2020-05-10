@@ -147,26 +147,35 @@ class Board extends Component {
     this.setState({selected:[-1,-1]});
   }
 
-  setAllowedFieldsForSelectedPiece(rankIndex, columnIndex){
+  setAllowedFieldsForSelectedPiece(){
     const {selected, boardStatus} = this.state;
 
     if (selected[0] === -1 || selected[1] === -1) return;
     
     let selectedPieceType = boardStatus[selected[0]][selected[1]];
 
-    if (['R','r'].includes(selectedPieceType)) {
-      this.applyRookRules();
-    } else if (['B','b'].includes(selectedPieceType)) {
-      this.applyBishopRules();
-    } else if (['Q','q'].includes(selectedPieceType)) {
-      this.applyBishopRules();
-      this.applyRookRules();
-    } else if (['N','n'].includes(selectedPieceType)) {
-      this.applyKnightRules();
-    } else if (['P', 'p'].includes(selectedPieceType)) {
-      this.applyPawnRules();
-    } else if (['K', 'k'].includes(selectedPieceType)) {
-      this.applyKingRules();
+    switch (selectedPieceType.toUpperCase()) {
+      case 'R':
+        this.applyRookRules();
+        break;
+      case 'B':
+        this.applyBishopRules();
+        break
+      case 'Q':
+        this.applyBishopRules();
+        this.applyRookRules();
+        break;
+      case 'N':
+        this.applyKnightRules();
+        break;
+      case 'P':
+        this.applyPawnRules();
+        break;
+      case 'K':
+        this.applyKingRules();
+        break;
+      default:
+        break;
     }
   }
 
