@@ -42,8 +42,6 @@ class Piece extends Component {
       }
     }
 
-    console.log(pieceStyle);
-
     return (
       <div
         className={isSelected ? 'selected-piece-wrapper':'piece-wrapper'}

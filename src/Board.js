@@ -356,8 +356,8 @@ class Board extends Component {
 
   isOpponentPiece(piece1, piece2) {
     return (
-      piece1 === piece1.toUpperCase() && piece2 !== piece2.toUpperCase() || 
-      piece1 !== piece1.toUpperCase() && piece2 === piece2.toUpperCase()
+      (piece1 === piece1.toUpperCase() && piece2 !== piece2.toUpperCase()) || 
+      (piece1 !== piece1.toUpperCase() && piece2 === piece2.toUpperCase())
     );
   }
 
