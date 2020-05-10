@@ -37,6 +37,13 @@ class Board extends Component {
         }, this.setAllowedFieldsForSelectedPiece);
         
     }
+
+    if ((prevProps.heatmapEnabled !== this.props.heatmapEnabled) && this.props.heatmapEnabled) {
+      this.setState({
+        heatmap: this.getHeatmap(this.getAvailabilityMatricies())
+      });
+    }
+
   }
 
   getFieldColour(rankIndex, columnIndex) {
@@ -183,11 +190,10 @@ class Board extends Component {
     const {boardStatus, selected} = this.state;
     if (boardStatus[rankCnt][columnCnt] === '-') {
       return FIELD_AVAILABILITY.AVAILABLE;
-    } 
-    else if (this.isOpponentPiece(boardStatus[selected[0]][selected[1]], boardStatus[rankCnt][columnCnt])) {
+    } else if (this.isOpponentPiece(boardStatus[selected[0]][selected[1]], boardStatus[rankCnt][columnCnt])) {
       return FIELD_AVAILABILITY.HIT;
     }
-    return FIELD_AVAILABILITY.UNAVAILABLE;
+    return FIELD_AVAILABILITY.DEFEND;
   }
 
   traverseHelper(rankCnt, columnCnt, rankIncrement, columnIncrement, tmpAllowedMtrx) {
@@ -282,20 +288,21 @@ class Board extends Component {
       }
 
       // White - hit
-      if (
-        rankIdx > 0 && columnIdx > 0 &&
-        boardStatus[rankIdx-1][columnIdx-1] !== '-' &&
-        this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx-1], boardStatus[rankIdx][columnIdx])
-      ) {
-        tmpAllowedMtrx[rankIdx-1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+      if (rankIdx > 0 && columnIdx > 0 && boardStatus[rankIdx-1][columnIdx-1] !== '-') {
+        if (this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx-1], boardStatus[rankIdx][columnIdx])) {
+          tmpAllowedMtrx[rankIdx-1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+        } else {
+          tmpAllowedMtrx[rankIdx-1][columnIdx-1] = FIELD_AVAILABILITY.DEFEND;
+        }
+        
       }
 
-      if (
-        rankIdx > 0 && columnIdx < 7 &&
-        boardStatus[rankIdx-1][columnIdx+1] !== '-' &&
-        this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx+1], boardStatus[rankIdx][columnIdx])
-      ) {
-        tmpAllowedMtrx[rankIdx-1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+      if (rankIdx > 0 && columnIdx < 7 && boardStatus[rankIdx-1][columnIdx+1] !== '-') {
+        if (this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx+1], boardStatus[rankIdx][columnIdx])) {
+          tmpAllowedMtrx[rankIdx-1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+        } else {
+          tmpAllowedMtrx[rankIdx-1][columnIdx+1] = FIELD_AVAILABILITY.DEFEND;
+        }
       }
 
     } else { // BLACK
@@ -315,20 +322,21 @@ class Board extends Component {
       }
 
       // Black - hit
-      if (
-        rankIdx < 7 && columnIdx < 7 &&
-        boardStatus[rankIdx+1][columnIdx+1] !== '-' &&
-        this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx+1], boardStatus[rankIdx][columnIdx])
-      ) {
-        tmpAllowedMtrx[rankIdx+1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+      if (rankIdx < 7 && columnIdx < 7 && boardStatus[rankIdx+1][columnIdx+1] !== '-') {
+        if (this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx+1], boardStatus[rankIdx][columnIdx])) {
+          tmpAllowedMtrx[rankIdx+1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+        } else {
+          tmpAllowedMtrx[rankIdx+1][columnIdx+1] = FIELD_AVAILABILITY.DEFEND;
+        }
       }
 
-      if (
-        rankIdx < 7 && columnIdx > 0 &&
-        boardStatus[rankIdx+1][columnIdx-1] !== '-' &&
-        this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx-1], boardStatus[rankIdx][columnIdx])
-      ) {
-        tmpAllowedMtrx[rankIdx+1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+      if (rankIdx < 7 && columnIdx > 0 && boardStatus[rankIdx+1][columnIdx-1] !== '-') {
+        if (this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx-1], boardStatus[rankIdx][columnIdx])) {
+          tmpAllowedMtrx[rankIdx+1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+        } else {
+          tmpAllowedMtrx[rankIdx+1][columnIdx-1] = FIELD_AVAILABILITY.DEFEND;
+        }
+        
       }
     }
     this.setState({
@@ -353,6 +361,8 @@ class Board extends Component {
           tmpAllowedMtrx[rankIdx+i][columnIdx+j] = FIELD_AVAILABILITY.AVAILABLE;
         } else if (this.isOpponentPiece(boardStatus[rankIdx+i][columnIdx+j], boardStatus[rankIdx][columnIdx])) {
           tmpAllowedMtrx[rankIdx+i][columnIdx+j] = FIELD_AVAILABILITY.HIT;
+        } else {
+          tmpAllowedMtrx[rankIdx+i][columnIdx+j] = FIELD_AVAILABILITY.DEFEND;
         }
       }
     }
@@ -368,6 +378,38 @@ class Board extends Component {
       (piece1 === piece1.toUpperCase() && piece2 !== piece2.toUpperCase()) || 
       (piece1 !== piece1.toUpperCase() && piece2 === piece2.toUpperCase())
     );
+  }
+
+  getAvailabilityMatricies() {
+    const {boardStatus} = this.state;
+    let resultMatricies = [];
+    for(let i=0; i<8; i++) {
+      for(let j=0; j<8; j++) {
+        // this.setState
+      }
+    }
+  }
+
+  getHeatmap(arrayOfMatricies) {
+    let resultHeatmap = getEmptyAvailabilityMatrix();
+
+    arrayOfMatricies.forEach(item => {
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          let matrix = item[0];
+          let piece = item[1];
+          if(matrix[i][j] > 0) {
+            if (piece.toUpperCase() === piece) {
+              resultHeatmap[i][j] += 1
+            } else {
+              resultHeatmap[i][j] -= 1
+            }
+          }
+        }
+      }
+    });
+
+    return resultHeatmap;
   }
 
   render() {
@@ -398,10 +440,13 @@ class Board extends Component {
                     className={this.getFieldColour(ridx,cidx)}
                     onClick={boardStatus[ridx][cidx] === '-' ?
                       ()=>this.onClickMoveField(ridx, cidx) : null}>
-                    {((selected[0] !== -1 && selected[1] !== -1) && allowedFieldsForSelected[ridx][cidx] === FIELD_AVAILABILITY.AVAILABLE) && 
-                    <div className='allowed-field'></div>}
-                    {((selected[0] !== -1 && selected[1] !== -1) && allowedFieldsForSelected[ridx][cidx] === FIELD_AVAILABILITY.HIT) && 
-                    <div className='hit-field'></div>}
+                    {(selected[0] !== -1 && selected[1] !== -1) &&
+                    (allowedFieldsForSelected[ridx][cidx] === FIELD_AVAILABILITY.AVAILABLE &&
+                    <div className={'allowed-field'}></div>) ||
+                    (allowedFieldsForSelected[ridx][cidx] === FIELD_AVAILABILITY.HIT && 
+                    <div className='hit-field'></div>) ||
+                    (this.props.heatmapEnabled && <div className='heatmap-field'></div>)
+                    }
                     {boardStatus[ridx][cidx] !== '-' &&
                       <Piece
                         piece={boardStatus[ridx][cidx]}

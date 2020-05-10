@@ -23,6 +23,7 @@ class App extends Component {
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.onChessRuleEnforcementChanged = this.onChessRuleEnforcementChanged.bind(this);
     this.onToggleConfig = this.onToggleConfig.bind(this);
+    this.onToggleHeatmap = this.onToggleHeatmap.bind(this);
 
     // Forsyth–Edwards Notation
     const startPosition = 'r1bqkbnr/pppp1ppp/8/1B2p3/3nP3/5N2/PPPP1PPP/RNBQK2R';
@@ -32,6 +33,7 @@ class App extends Component {
       pieceStyle: 'fontAwesome',
       chessRulesEnforced: true,
       showConfig: false,
+      heatmapOn: false,
     };
   }
 
@@ -62,11 +64,13 @@ class App extends Component {
   onToggleConfig(event) {
     this.setState({showConfig:!this.state.showConfig});
   }
+  onToggleHeatmap(event) {
+    this.setState({heatmapOn:!this.state.heatmapOn});
+  }
 
   render() {
     return <div>
       <header>
-        
         <h1>
           <FontAwesomeIcon 
             icon={faChess} 
@@ -91,6 +95,7 @@ class App extends Component {
           position={this.state.position}
           pieceStyle={this.state.pieceStyle}
           chessRulesEnforced={this.state.chessRulesEnforced}
+          heatmapEnabled={this.state.heatmapOn}
           onBoardUpdated={this.updateFEN} />
         {this.state.showConfig &&
         <div className='config-panel'>
@@ -105,20 +110,28 @@ class App extends Component {
               <input type='text' value={this.state.textInput} onChange={this.onFENChanged} />
             </label>
             <label>Board style
-              <select onChange={this.onStyleChanged}>
-                <option value='fontAwesome' selected={this.state.pieceStyle === 'fontAwesome'}>Font Awesome</option>
-                <option value='alpha' selected={this.state.pieceStyle === 'alpha'}>alpha</option>
-                <option value='cheq' selected={this.state.pieceStyle === 'cheq'}>cheq</option>
-                <option value='leipzig' selected={this.state.pieceStyle === 'leipzig'}>leipzig</option>
+              <select onChange={this.onStyleChanged} value={this.state.pieceStyle}>
+                <option value='fontAwesome'>Font Awesome</option>
+                <option value='alpha'>alpha</option>
+                <option value='cheq'>cheq</option>
+                <option value='leipzig'>leipzig</option>
               </select>
             </label>
             <label style={{flexFlow: 'row'}}>Enforce chess rules: 
-            <FontAwesomeIcon 
-              icon={this.state.chessRulesEnforced ? faCheckSquare : faSquare}
-              onClick={this.onChessRuleEnforcementChanged}
-              size='lg'
-              style={{marginLeft: '10px', cursor: 'pointer'}}
-            />
+              <FontAwesomeIcon 
+                icon={this.state.chessRulesEnforced ? faCheckSquare : faSquare}
+                onClick={this.onChessRuleEnforcementChanged}
+                size='lg'
+                style={{marginLeft: '10px', cursor: 'pointer'}}
+              />
+            </label>
+            <label style={{flexFlow: 'row'}}>Enable heatmap: 
+              <FontAwesomeIcon 
+                icon={this.state.heatmapOn ? faCheckSquare : faSquare}
+                onClick={this.onToggleHeatmap}
+                size='lg'
+                style={{marginLeft: '10px', cursor: 'pointer'}}
+              />
             </label>
           </div>
         </div>}

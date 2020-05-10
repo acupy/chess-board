@@ -19,7 +19,7 @@ const PIECES = {
 }
 
 const FIELD_AVAILABILITY = {
-  AVAILABLE: 1, HIT: 2, UNAVAILABLE: 0
+  UNAVAILABLE: 0, AVAILABLE: 1, HIT: 2, DEFEND: 3
 };
 
 const COLUMNS = ['A','B','C','D','E','F','G','H'];
