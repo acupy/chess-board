@@ -15,3 +15,5 @@
 | 3 | - | - | - | - | - | N | - | - |
 | 2 | P | P | P | P | - | P | P | P |
 | 1 | R | N | B | Q | K | - | - | R |
+
+![Chess board](public/img/readme/chessboard.png)

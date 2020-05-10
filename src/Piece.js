@@ -50,7 +50,7 @@ class Piece extends Component {
         onMouseUp={this.clickHandler}>
         {pieceStyle !== 'fontAwesome' && <img
           className='piece'
-          src={`img/${pieceStyle}/${PIECES[piece]}`}
+          src={`img/pieceStyles/${pieceStyle}/${PIECES[piece]}`}
           alt={ALT_PIECES[piece]}/>}
         {pieceStyle === 'fontAwesome' && 
           <FontAwesomeIcon 
