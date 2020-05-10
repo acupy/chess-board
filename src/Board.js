@@ -181,45 +181,29 @@ class Board extends Component {
     return FIELD_AVAILABILITY.UNAVAILABLE;
   }
 
-  traverseHelper(wileCondition, rankCnt, columnCnt, rankIncrement, columnIncrement, tmpAllowedMtrx) {
-    while(wileCondition(rankCnt, columnCnt)) { 
+  traverseHelper(rankCnt, columnCnt, rankIncrement, columnIncrement, tmpAllowedMtrx) {
+    rankCnt+=rankIncrement;
+    columnCnt+=columnIncrement; 
+    while((-1<rankCnt && rankCnt<8) && (-1<columnCnt && columnCnt<8)) { // within the board
       let fieldAvailability = this.getFieldAvailabilityForSelected(rankCnt, columnCnt);
-      if (fieldAvailability === FIELD_AVAILABILITY.UNAVAILABLE) break;
-      tmpAllowedMtrx[rankCnt][columnCnt] = fieldAvailability
-      if (fieldAvailability === FIELD_AVAILABILITY.HIT) break;
+      tmpAllowedMtrx[rankCnt][columnCnt] = fieldAvailability;
+      if (fieldAvailability !== FIELD_AVAILABILITY.AVAILABLE) break; // break if we cannot go further
 
       rankCnt+=rankIncrement;
       columnCnt+=columnIncrement;
     }
   }
 
-  traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx) {
-    const {boardStatus} = this.state;
-    if((-1<rankCnt && rankCnt<8) && (-1<columnCnt && columnCnt<8)) { // within the board
-      if (boardStatus[rankCnt][columnCnt] === '-') { // Available field
-        tmpAllowedMtrx[rankCnt][columnCnt] = FIELD_AVAILABILITY.AVAILABLE;
-      } else if (this.isOpponentPiece(boardStatus[rankCnt][columnCnt], boardStatus[rankIdx][columnIdx])) { // opponent piece
-        tmpAllowedMtrx[rankCnt][columnCnt] = FIELD_AVAILABILITY.HIT;
-      }
-    }
-    return tmpAllowedMtrx;
-  }
-
   applyRookRules() {
-    const {selected, allowedFieldsForSelected, boardStatus} = this.state;
+    const {selected, allowedFieldsForSelected} = this.state;
     let tmpAllowedMtrx = allowedFieldsForSelected;
 
-    //Up
-    this.traverseHelper((rankCnt, _)=>rankCnt > -1, selected[0]-1, selected[1], -1, 0, tmpAllowedMtrx);
-
-    //Down
-    this.traverseHelper((rankCnt, _)=>rankCnt < 8, selected[0]+1, selected[1], 1, 0, tmpAllowedMtrx);
-
-    //Left
-    this.traverseHelper((_, columnCnt)=>columnCnt > -1, selected[0], selected[1]-1, 0, -1, tmpAllowedMtrx);
-
-    //Right
-    this.traverseHelper((_, columnCnt)=>columnCnt < 8, selected[0], selected[1]+1, 0, 1, tmpAllowedMtrx);
+    for(let i=-1; i<=1; i++) {
+      for(let j=-1; j<=1; j++) {
+        if (Math.abs(i) === Math.abs(j)) continue;
+        this.traverseHelper(selected[0], selected[1], i, j, tmpAllowedMtrx);
+      }
+    }
 
     this.setState({
       allowedFieldsForSelected: tmpAllowedMtrx
@@ -228,22 +212,15 @@ class Board extends Component {
   }
 
   applyBishopRules() {
-    const {selected, allowedFieldsForSelected, boardStatus} = this.state;
+    const {selected, allowedFieldsForSelected} = this.state;
     let tmpAllowedMtrx = allowedFieldsForSelected;
 
-    //Up-Left
-    this.traverseHelper((rankCnt, columnCnt)=>rankCnt > -1 && columnCnt > -1, selected[0]-1, selected[1]-1, -1, -1, tmpAllowedMtrx);
-
-
-    //Up-Right
-    this.traverseHelper((rankCnt, columnCnt)=>rankCnt > -1 && columnCnt < 8, selected[0]-1, selected[1]+1, -1, +1, tmpAllowedMtrx);
-
-    //Down-Left
-    this.traverseHelper((rankCnt, columnCnt)=>columnCnt > -1 && rankCnt < 8, selected[0]+1, selected[1]-1, 1, -1, tmpAllowedMtrx);
-
-
-    //Down-Right
-    this.traverseHelper((rankCnt, columnCnt)=>columnCnt < 8 && rankCnt < 8, selected[0]+1, selected[1]+1, 1, 1, tmpAllowedMtrx);
+    for(let i=-1; i<=1; i++) {
+      for(let j=-1; j<=1; j++) {
+        if (Math.abs(i) !== Math.abs(j) || i === 0 || j === 0) continue;
+        this.traverseHelper(selected[0], selected[1], i, j, tmpAllowedMtrx);
+      }
+    }
 
     this.setState({
       allowedFieldsForSelected: tmpAllowedMtrx
@@ -252,7 +229,7 @@ class Board extends Component {
   }
 
   applyKnightRules() {
-    const {selected, allowedFieldsForSelected, boardStatus} = this.state;
+    const {selected, allowedFieldsForSelected} = this.state;
     let tmpAllowedMtrx = allowedFieldsForSelected;
 
     const rankIdx = selected[0];
@@ -261,7 +238,9 @@ class Board extends Component {
     for(let i=-2; i<=2; i++) {
       for(let j=-2; j<=2; j++) {
         if (Math.abs(i) === Math.abs(j) || i === 0 || j === 0) continue;
-        tmpAllowedMtrx = this.traverseKnightHelper(rankIdx+i, columnIdx+j, rankIdx, columnIdx, tmpAllowedMtrx);
+        if((-1<rankIdx+i && rankIdx+i<8) && (-1<columnIdx+j && columnIdx+j<8)) {
+          tmpAllowedMtrx[rankIdx+i][columnIdx+j] = this.getFieldAvailabilityForSelected(rankIdx+i, columnIdx+j);
+        }
       }
     }
     
