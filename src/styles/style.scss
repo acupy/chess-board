@@ -259,12 +259,17 @@ $BRIGHT_RED_COLOR: rgba(#973e30, .7);
   text-align: center;
 }
 
-.column-index-container {
+.column-index-container, .board-bottom-status {
   display: flex;
   margin-left: 10%;
   justify-content: center;
   width: 80%;
   height: 10%;
+}
+
+.board-bottom-status {
+  align-items: center;
+  font-size: 20px;
 }
 
 .column-index {
