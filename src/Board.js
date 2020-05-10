@@ -155,18 +155,18 @@ class Board extends Component {
     let selectedPieceType = boardStatus[selected[0]][selected[1]];
 
     if (['R','r'].includes(selectedPieceType)) {
-      console.log('it\'s a rook!!!');
       this.applyRookRules();
-    } else if(['B','b'].includes(selectedPieceType)) {
-      console.log('it\'s a bishop!!!');
+    } else if (['B','b'].includes(selectedPieceType)) {
       this.applyBishopRules();
-    } else if(['Q','q'].includes(selectedPieceType)) {
-      console.log('it\'s a queen!!!');
+    } else if (['Q','q'].includes(selectedPieceType)) {
       this.applyBishopRules();
       this.applyRookRules();
-    } else if(['N','n'].includes(selectedPieceType)) {
-      console.log('it\'s a knight!!!');
+    } else if (['N','n'].includes(selectedPieceType)) {
       this.applyKnightRules();
+    } else if (['P', 'p'].includes(selectedPieceType)) {
+      this.applyPawnRules();
+    } else if (['K', 'k'].includes(selectedPieceType)) {
+      this.applyKingRules();
     }
   }
 
@@ -301,9 +301,81 @@ class Board extends Component {
   }
 
   applyPawnRules() {
-    // hit and move different
-    // first it can move 2 fields forward
-    //change for an other piece at the first rank of the opponent
+    const {selected, allowedFieldsForSelected, boardStatus} = this.state;
+    let tmpAllowedMtrx = allowedFieldsForSelected;
+
+    const rankIdx = selected[0];
+    const columnIdx = selected[1];
+
+    // WHITE
+    if (boardStatus[rankIdx][columnIdx].toUpperCase() === boardStatus[rankIdx][columnIdx]) {
+      // White - step
+      if(rankIdx === 6) {
+        if (boardStatus[rankIdx-1][columnIdx] === '-') {
+          tmpAllowedMtrx[rankIdx-1][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+          if (boardStatus[rankIdx-2][columnIdx] === '-') {
+            tmpAllowedMtrx[rankIdx-2][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+          }
+        }
+      } else if(rankIdx < 6 && rankIdx > 0) {
+        if (boardStatus[rankIdx-1][columnIdx] === '-') {
+          tmpAllowedMtrx[rankIdx-1][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+        }
+      }
+
+      // White - hit
+      if (
+        rankIdx > 0 && columnIdx > 0 &&
+        boardStatus[rankIdx-1][columnIdx-1] !== '-' &&
+        this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx-1], boardStatus[rankIdx][columnIdx])
+      ) {
+        tmpAllowedMtrx[rankIdx-1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+      }
+
+      if (
+        rankIdx > 0 && columnIdx < 7 &&
+        boardStatus[rankIdx-1][columnIdx+1] !== '-' &&
+        this.isOpponentPiece(boardStatus[rankIdx-1][columnIdx+1], boardStatus[rankIdx][columnIdx])
+      ) {
+        tmpAllowedMtrx[rankIdx-1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+      }
+
+    } else { // BLACK
+    
+      // Black - step
+      if(rankIdx === 1) {
+        if (boardStatus[rankIdx+1][columnIdx] === '-') {
+          tmpAllowedMtrx[rankIdx+1][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+          if (boardStatus[rankIdx+2][columnIdx] === '-') {
+            tmpAllowedMtrx[rankIdx+2][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+          }
+        }
+      } else if(rankIdx > 1 && rankIdx < 7) {
+        if (boardStatus[rankIdx+1][columnIdx] === '-') {
+          tmpAllowedMtrx[rankIdx+1][columnIdx] = FIELD_AVAILABILITY.AVAILABLE;
+        }
+      }
+
+      // Black - hit
+      if (
+        rankIdx < 7 && columnIdx < 7 &&
+        boardStatus[rankIdx+1][columnIdx+1] !== '-' &&
+        this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx+1], boardStatus[rankIdx][columnIdx])
+      ) {
+        tmpAllowedMtrx[rankIdx+1][columnIdx+1] = FIELD_AVAILABILITY.HIT;
+      }
+
+      if (
+        rankIdx < 7 && columnIdx > 0 &&
+        boardStatus[rankIdx+1][columnIdx-1] !== '-' &&
+        this.isOpponentPiece(boardStatus[rankIdx+1][columnIdx-1], boardStatus[rankIdx][columnIdx])
+      ) {
+        tmpAllowedMtrx[rankIdx+1][columnIdx-1] = FIELD_AVAILABILITY.HIT;
+      }
+    }
+    this.setState({
+      allowedFieldsForSelected: tmpAllowedMtrx
+    });
   }
 
   applyKingRules() {
