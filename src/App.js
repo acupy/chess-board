@@ -106,10 +106,10 @@ class App extends Component {
             </div>
           </div>
           <div className='config-panel-body'>
-            <label>FEN 
+            <label>Board status (FEN)
               <input type='text' value={this.state.textInput} onChange={this.onFENChanged} />
             </label>
-            <label>Board style
+            <label>Piece style
               <select onChange={this.onStyleChanged} value={this.state.pieceStyle}>
                 <option value='fontAwesome'>Font Awesome</option>
                 <option value='alpha'>alpha</option>
@@ -125,14 +125,14 @@ class App extends Component {
                 style={{marginLeft: '10px', cursor: 'pointer'}}
               />
             </label>
-            <label style={{flexFlow: 'row'}}>Enable heatmap: 
+            {/* <label style={{flexFlow: 'row'}}>Enable heatmap: 
               <FontAwesomeIcon 
                 icon={this.state.heatmapOn ? faCheckSquare : faSquare}
                 onClick={this.onToggleHeatmap}
                 size='lg'
                 style={{marginLeft: '10px', cursor: 'pointer'}}
               />
-            </label>
+            </label> */}
           </div>
         </div>}
       </div>
