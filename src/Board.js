@@ -4,6 +4,8 @@ import './styles/style.css';
 import Piece from './Piece';
 import { COLUMNS, RANKS, FIELD_AVAILABILITY } from './consts';
 import { getEmptyAvailabilityMatrix } from './utils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSquare } from '@fortawesome/free-solid-svg-icons';
 
 class Board extends Component {
   constructor(props) {
@@ -19,6 +21,7 @@ class Board extends Component {
       selected: [-1,-1], // Invalid initial selection
       allowedFieldsForSelected: getEmptyAvailabilityMatrix(),
       boardStatus: this.getBoardFromFEN(position),
+      turn: true, // true - white / false - black 
     };
   }
 
@@ -88,11 +91,19 @@ class Board extends Component {
   }
 
   selectPiece(rankIdx, columnIdx) {
-    const {allowedFieldsForSelected} = this.state;
+    const {allowedFieldsForSelected, boardStatus, turn} = this.state;
     const {chessRulesEnforced} = this.props;
+
     if (chessRulesEnforced && allowedFieldsForSelected[rankIdx][columnIdx] === FIELD_AVAILABILITY.HIT) {
       this.onClickMoveField(rankIdx, columnIdx);
       return;
+    }
+
+    if (chessRulesEnforced &&
+      ((boardStatus[rankIdx][columnIdx].toUpperCase() === boardStatus[rankIdx][columnIdx] && !turn) ||
+      (boardStatus[rankIdx][columnIdx].toUpperCase() !== boardStatus[rankIdx][columnIdx] && turn))
+    ){
+        return;
     }
 
     this.setState((prevState, props)=>{
@@ -125,7 +136,7 @@ class Board extends Component {
       
       props.onBoardUpdated(this.getFENFromBoard(boardStatus));
 
-      return { boardStatus: boardStatus, selected: [-1, -1] };
+      return { boardStatus: boardStatus, selected: [-1, -1], turn:!this.state.turn };
     });
   }
 
@@ -413,7 +424,7 @@ class Board extends Component {
   }
 
   render() {
-    const { pieceStyle } = this.props;
+    const { pieceStyle, chessRulesEnforced } = this.props;
     const { selected, boardStatus, allowedFieldsForSelected } = this.state;
 
     return (
@@ -460,7 +471,14 @@ class Board extends Component {
           </div>
           <div className='rank-index-container'></div>
         </div>
-        <div className='column-index-container'></div>
+        {chessRulesEnforced &&
+        <div className='board-bottom-status'>
+          <div style={{marginLeft:'auto'}}>turn:
+          <FontAwesomeIcon 
+            style={{color:this.state.turn ? '#bfb3a2' : '#444a54', marginLeft: '10px'}} 
+            icon={faSquare} />
+          </div>
+        </div>}
       </div>
     );
   }
