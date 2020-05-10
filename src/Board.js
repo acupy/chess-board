@@ -379,7 +379,29 @@ class Board extends Component {
   }
 
   applyKingRules() {
-    // cannot move into check
+    const {selected, allowedFieldsForSelected, boardStatus} = this.state;
+    let tmpAllowedMtrx = allowedFieldsForSelected;
+
+    const rankIdx = selected[0];
+    const columnIdx = selected[1];
+
+    for(let i=-1; i<=1; i++) {
+      for(let j=-1; j<=1; j++) {
+        if (
+          (i===0 && j===0) || 
+          (rankIdx+i > 7 || rankIdx+i < 0 || columnIdx+j > 7 || columnIdx+j < 0)
+        ) continue;
+        if(boardStatus[rankIdx+i][columnIdx+j] === '-') {
+          tmpAllowedMtrx[rankIdx+i][columnIdx+j] = FIELD_AVAILABILITY.AVAILABLE;
+        } else if (this.isOpponentPiece(boardStatus[rankIdx+i][columnIdx+j], boardStatus[rankIdx][columnIdx])) {
+          tmpAllowedMtrx[rankIdx+i][columnIdx+j] = FIELD_AVAILABILITY.HIT;
+        }
+      }
+    }
+
+    this.setState({
+      allowedFieldsForSelected: tmpAllowedMtrx
+    });
     
   }
 
