@@ -189,7 +189,7 @@ $BRIGHT_RED_COLOR: rgba(#973e30, .7);
 }
 
 .sub-board-wrapper {
-  @include media(height, $SMALL_BOARD_SIZE*0.9, $MEDIUM_BOARD_SIZE*0.9, $BIG_BOARD_SIZE*0.9);
+  @include media(height, $SMALL_BOARD_SIZE*0.8, $MEDIUM_BOARD_SIZE*0.8, $BIG_BOARD_SIZE*0.8);
 
   box-shadow: none;
 }
@@ -197,7 +197,7 @@ $BRIGHT_RED_COLOR: rgba(#973e30, .7);
 .board {
   display: inline-block;
   width: 80%;
-  height: 88.889%;
+  height: 100%;
   // border: 1px solid #7d6733;
 }
 
@@ -237,7 +237,7 @@ $BRIGHT_RED_COLOR: rgba(#973e30, .7);
 
 .rank-index-container {
   float: left;
-  height: 88.889%;
+  height: 100%;
   width: 10%;
 }
 
