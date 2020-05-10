@@ -162,8 +162,10 @@ $MEDIUM_BOARD_FONT_SIZE: 1.5rem;
 $BIG_BOARD_FONT_SIZE: 1.7rem;
 $PALE_GREEN_COLOR: rgba(#85a339, .5);
 $DARK_GREEN_COLOR: rgba(#323d15, .5);
+$BRIGHT_GREEN_COLOR: rgba(#a4c74a, .5);
 $PALE_RED_COLOR: rgba(#501109, .7);
 $DARK_RED_COLOR: rgba(#200703, .7);
+$BRIGHT_RED_COLOR: rgba(#973e30, .7);
 
 .board-wrapper, .sub-board-wrapper {
   @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
@@ -300,7 +302,7 @@ $DARK_RED_COLOR: rgba(#200703, .7);
 
 .allowed-field {
   &:hover {
-    background-color: $DARK_GREEN_COLOR;
+    background-color: $BRIGHT_GREEN_COLOR;
   }
 }
 
@@ -309,10 +311,10 @@ $DARK_RED_COLOR: rgba(#200703, .7);
 }
 
 .hit-field ~ .piece-wrapper  {
-  cursor: grabbing;
+  cursor: pointer;
   transition: background-color 0.25s;
   &:hover {
-    background-color: $DARK_RED_COLOR;
+    background-color: $BRIGHT_RED_COLOR;
   }
 }
 
