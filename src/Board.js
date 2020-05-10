@@ -258,42 +258,12 @@ class Board extends Component {
     const rankIdx = selected[0];
     const columnIdx = selected[1];
 
-    // Up-Left
-    let rankCnt = rankIdx-2;
-    let columnCnt = columnIdx-1;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-    
-    // Up-Right
-    rankCnt = rankIdx-2;
-    columnCnt = columnIdx+1;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-
-    // Down-Left
-    rankCnt = rankIdx+2;
-    columnCnt = columnIdx-1;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-    // Down-Right
-    rankCnt = rankIdx+2;
-    columnCnt = columnIdx+1;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-
-    // Left-Up
-    rankCnt = rankIdx-1;
-    columnCnt = columnIdx-2;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-    // Left-Down
-    rankCnt = rankIdx+1;
-    columnCnt = columnIdx-2;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-
-    // Right-Up
-    rankCnt = rankIdx-1;
-    columnCnt = columnIdx+2;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
-    // Right-Down
-    rankCnt = rankIdx+1;
-    columnCnt = columnIdx+2;
-    tmpAllowedMtrx = this.traverseKnightHelper(rankCnt, columnCnt, rankIdx, columnIdx, tmpAllowedMtrx);
+    for(let i=-2; i<=2; i++) {
+      for(let j=-2; j<=2; j++) {
+        if (Math.abs(i) === Math.abs(j) || i === 0 || j === 0) continue;
+        tmpAllowedMtrx = this.traverseKnightHelper(rankIdx+i, columnIdx+j, rankIdx, columnIdx, tmpAllowedMtrx);
+      }
+    }
     
     this.setState({
       allowedFieldsForSelected: tmpAllowedMtrx
