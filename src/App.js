@@ -78,6 +78,7 @@ class App extends Component {
         <div className='select-container'>
           <select onChange={this.onThemeChanged}>
             <option value='gray'>gray</option>
+            <option value='green'>green</option>
             <option value='purple'>purple</option>
           </select>
         </div>

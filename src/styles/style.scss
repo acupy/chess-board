@@ -14,18 +14,28 @@ $BIG_BOARD_SIZE: 550px;
 // for compatibility reasons.
 $purple_variables: (
   --header-bg: #282234,
-  --background: #443a57,
+  --background: #2c2738,
 );
 
 $gray_variables: (
 --header-bg: #202020,
---background: #484848,
+--background: #282828,
+);
+
+$green_variables: (
+  --header-bg: #222723,
+  --background: #32382e,
 );
 
 //Here we transfer the variables from the map to the :root element
 @if($css4) {
   :root.purple {
     @each $variable, $value in $purple_variables {
+      #{$variable}: $value;
+    }
+  }
+  :root.green {
+    @each $variable, $value in $green_variables {
       #{$variable}: $value;
     }
   }
@@ -62,7 +72,7 @@ html {
 body {
   background-color: var(--background);
   color: white;
-  font-family: Arial;
+  font-family: 'Bradley Hand';
   margin:0px;
   padding:0px;
 }
