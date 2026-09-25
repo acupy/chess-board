@@ -12,6 +12,13 @@ export {
 } from './moves';
 export { isSquareAttacked } from './attacks';
 export {
+  findPlayerDangers,
+  takeNewDangers,
+  findHangingPieces,
+  findAbsolutePins,
+  listAttackers,
+} from './danger';
+export {
   applyUciMove,
   listLegalUciMoves,
   getGameResult,

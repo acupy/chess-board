@@ -106,3 +106,39 @@ export const coachWelcome = () =>
 
 export const coachUndo = () =>
   'Okay, that move is undone. Your turn again.';
+
+/**
+ * Point out new hanging pieces / absolute pins for the learner.
+ * @param {{ kind: string, label: string }[]} dangers
+ */
+export const coachDanger = (dangers) => {
+  if (!dangers?.length) return '';
+
+  const hangings = dangers.filter((d) => d.kind === 'hanging');
+  const pins = dangers.filter((d) => d.kind === 'pin');
+  const parts = [];
+
+  if (hangings.length === 1) {
+    parts.push(`Careful — ${hangings[0].label} is hanging (attacked and not defended).`);
+  } else if (hangings.length > 1) {
+    const list = hangings.map((d) => d.label.replace(/^your /, '')).join(', ');
+    parts.push(`Careful — these pieces are hanging: ${list}.`);
+  }
+
+  if (pins.length === 1) {
+    parts.push(
+      hangings.length
+        ? `Also, ${pins[0].label} is pinned to your king — it can’t safely move off that line.`
+        : `Watch out — ${pins[0].label} is pinned to your king — it can’t safely move off that line.`
+    );
+  } else if (pins.length > 1) {
+    const list = pins.map((d) => d.label.replace(/^your /, '')).join(', ');
+    parts.push(
+      hangings.length
+        ? `Also, these pieces are pinned to your king: ${list}.`
+        : `Watch out — these pieces are pinned to your king: ${list}.`
+    );
+  }
+
+  return parts.join(' ');
+};

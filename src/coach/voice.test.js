@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseFEN } from '../chess/fen';
-import { coachGameOver, coachHint, coachOnMove, coachWelcome } from './voice';
+import { coachDanger, coachGameOver, coachHint, coachOnMove, coachWelcome } from './voice';
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -52,5 +52,15 @@ describe('coach voice', () => {
       coachGameOver({ result: 'loss', playerElo: 1180, eloDelta: -12, reason: 'checkmate' })
     ).toMatch(/that’s okay|thats okay/i);
     expect(coachWelcome()).not.toMatch(/engine/i);
+  });
+
+  it('warns about hanging pieces and pins', () => {
+    expect(
+      coachDanger([{ kind: 'hanging', label: 'your knight on c3' }])
+    ).toMatch(/hanging/i);
+    expect(
+      coachDanger([{ kind: 'pin', label: 'your knight on e4' }])
+    ).toMatch(/pinned/i);
+    expect(coachDanger([])).toBe('');
   });
 });

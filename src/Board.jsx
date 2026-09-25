@@ -37,6 +37,7 @@ const getFieldColour = (rankIndex, columnIndex) => {
  * @param {boolean} [props.coachMode] - when true, rules always on and only report moves via onPlayerMove
  * @param {[number, number]|null} [props.hintFrom]
  * @param {[number, number]|null} [props.hintTo]
+ * @param {{ coords: [number, number], kind: string }[]} [props.dangerMarks]
  */
 function Board({
   position,
@@ -49,6 +50,7 @@ function Board({
   coachMode = false,
   hintFrom = null,
   hintTo = null,
+  dangerMarks = [],
 }) {
   const rulesOn = coachMode || chessRulesEnforced;
   const [game, setGame] = useState(() => parseFEN(position));
@@ -162,6 +164,23 @@ function Board({
   const checkedKing = inCheck ? findKing(game.board, whiteToMove) : null;
   const winner = isCheckmate ? getWinner(game) : null;
 
+  const dangerBySquare = useMemo(() => {
+    const map = new Map();
+    for (const mark of dangerMarks) {
+      if (!mark?.coords) continue;
+      const key = `${mark.coords[0]},${mark.coords[1]}`;
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, mark.kind);
+      } else if (mark.kind === 'hanging' || prev === 'hanging') {
+        map.set(key, 'hanging');
+      } else {
+        map.set(key, mark.kind);
+      }
+    }
+    return map;
+  }, [dangerMarks]);
+
   const mateAlert =
     isCheckmate && winner === 'white'
       ? 'Checkmate — White wins'
@@ -211,6 +230,7 @@ function Board({
                 const isHintFrom =
                   hintFrom && hintFrom[0] === ridx && hintFrom[1] === cidx;
                 const isHintTo = hintTo && hintTo[0] === ridx && hintTo[1] === cidx;
+                const dangerKind = dangerBySquare.get(`${ridx},${cidx}`);
                 return (
                   <div
                     key={`field-${ridx}-${cidx}`}
@@ -219,6 +239,8 @@ function Board({
                       isKingChecked ? 'check-field' : '',
                       isHintFrom ? 'hint-from-field' : '',
                       isHintTo ? 'hint-to-field' : '',
+                      dangerKind === 'hanging' ? 'danger-hanging-field' : '',
+                      dangerKind === 'pin' ? 'danger-pin-field' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}

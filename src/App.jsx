@@ -11,6 +11,7 @@ import Board from './Board';
 import CoachPanel from './CoachPanel';
 import {
   applyUciMove,
+  findPlayerDangers,
   GAME_RESULT,
   getGameResult,
   getWinner,
@@ -20,10 +21,12 @@ import {
   parseUciMove,
   pickLegalEngineMove,
   serializeFEN,
+  takeNewDangers,
   validateFEN,
 } from './chess';
 import { engineEloForPlayer, updateElo } from './coach/elo';
 import {
+  coachDanger,
   coachGameOver,
   coachHint,
   coachOnMove,
@@ -61,6 +64,7 @@ function App() {
   const [position, setPosition] = useState(initialFen);
   const [pieceStyle, setPieceStyle] = useState(initialPrefs.pieceStyle);
   const [theme, setTheme] = useState(initialPrefs.theme);
+  const [pointOutDangers, setPointOutDangers] = useState(initialPrefs.pointOutDangers);
   const [chessRulesEnforced, setChessRulesEnforced] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
   const [coachMode, setCoachMode] = useState(true);
@@ -77,13 +81,32 @@ function App() {
   const [history, setHistory] = useState(initialSession?.history || []);
   const [moves, setMoves] = useState(initialSession?.moves || []);
   const [hintSquares, setHintSquares] = useState(null);
+  const [dangerMarks, setDangerMarks] = useState([]);
 
   const gameEndedRef = useRef(Boolean(initialSession?.gameOver));
   const sessionEngineEloRef = useRef(initialEngineElo);
   const positionRef = useRef(initialFen);
+  const announcedDangersRef = useRef(new Set());
   useEffect(() => {
     positionRef.current = position;
   }, [position]);
+
+  const syncDangerMarks = useCallback(
+    (game, { announce = false } = {}) => {
+      if (!coachMode || !pointOutDangers || !game) {
+        setDangerMarks([]);
+        return '';
+      }
+      const { all } = findPlayerDangers(game, true);
+      setDangerMarks(all);
+      if (!announce) {
+        announcedDangersRef.current = new Set(all.map((d) => d.key));
+        return '';
+      }
+      return coachDanger(takeNewDangers(announcedDangersRef.current, all));
+    },
+    [coachMode, pointOutDangers]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +225,10 @@ function App() {
 
       const ended = checkAndFinish(next);
       if (!ended) {
+        const dangerLine = syncDangerMarks(next, { announce: true });
+        if (dangerLine) {
+          setCoachMessage(dangerLine);
+        }
         if (isInCheck(next.board, isWhiteToMove(next))) {
           setStatus('Check! Your move.');
         } else {
@@ -209,7 +236,7 @@ function App() {
         }
       }
     },
-    [checkAndFinish]
+    [checkAndFinish, syncDangerMarks]
   );
 
   // If refresh interrupted the opponent's reply, finish that move on load
@@ -282,13 +309,17 @@ function App() {
         });
 
         setCoachMessage(
-          coachOnMove({
-            gameBefore: beforeGame,
-            playedUci: uci,
-            bestUci: classification.bestMove,
-            verdict: classification.verdict,
-            lossCp: classification.lossCp,
-          })
+          (() => {
+            const moveMsg = coachOnMove({
+              gameBefore: beforeGame,
+              playedUci: uci,
+              bestUci: classification.bestMove,
+              verdict: classification.verdict,
+              lossCp: classification.lossCp,
+            });
+            const dangerLine = syncDangerMarks(game, { announce: true });
+            return dangerLine ? `${moveMsg} ${dangerLine}` : moveMsg;
+          })()
         );
 
         const ended = checkAndFinish(game);
@@ -310,7 +341,7 @@ function App() {
         setBusy(false);
       }
     },
-    [coachMode, gameOver, busy, checkAndFinish, playEngineReply, verdict, coachMessage, status, moves]
+    [coachMode, gameOver, busy, checkAndFinish, playEngineReply, syncDangerMarks, verdict, coachMessage, status, moves]
   );
 
   const onUndo = () => {
@@ -324,6 +355,12 @@ function App() {
     setStatus(previous.status || 'Your move.');
     setMoves(previous.moves || []);
     setHintSquares(null);
+    try {
+      syncDangerMarks(parseFEN(previous.fen), { announce: false });
+    } catch {
+      setDangerMarks([]);
+      announcedDangersRef.current = new Set();
+    }
   };
 
   const onHint = async () => {
@@ -379,6 +416,8 @@ function App() {
     setHistory([]);
     setMoves([]);
     setHintSquares(null);
+    setDangerMarks([]);
+    announcedDangersRef.current = new Set();
     setPosition(START_POSITION);
     setTextInput(START_POSITION);
     setCoachMessage(coachWelcome());
@@ -449,6 +488,7 @@ function App() {
             onPlayerMove={handlePlayerMove}
             hintFrom={hintSquares?.from || null}
             hintTo={hintSquares?.to || null}
+            dangerMarks={dangerMarks}
             onBoardUpdated={(fen) => {
               setTextInput(fen);
               if (!coachMode) setPosition(fen);
@@ -559,6 +599,31 @@ function App() {
                   ))}
                 </select>
               </label>
+              {coachMode && (
+                <label style={{ flexFlow: 'row' }}>
+                  Point out dangers:
+                  <FontAwesomeIcon
+                    icon={pointOutDangers ? faSquareCheck : faSquare}
+                    onClick={() => {
+                      const next = !pointOutDangers;
+                      setPointOutDangers(next);
+                      updatePreferences({ pointOutDangers: next });
+                      if (!next) {
+                        setDangerMarks([]);
+                        announcedDangersRef.current = new Set();
+                      } else {
+                        try {
+                          syncDangerMarks(parseFEN(position), { announce: false });
+                        } catch {
+                          setDangerMarks([]);
+                        }
+                      }
+                    }}
+                    size="lg"
+                    style={{ marginLeft: '10px', cursor: 'pointer' }}
+                  />
+                </label>
+              )}
               {!coachMode && (
                 <label style={{ flexFlow: 'row' }}>
                   Enforce chess rules:

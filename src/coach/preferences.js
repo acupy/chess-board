@@ -11,6 +11,7 @@ export const THEME_OPTIONS = [
 export const defaultPreferences = () => ({
   pieceStyle: 'cburnett',
   theme: 'gray',
+  pointOutDangers: true,
 });
 
 export const loadPreferences = () => {
@@ -24,7 +25,11 @@ export const loadPreferences = () => {
     const theme = THEME_OPTIONS.some((t) => t.id === parsed.theme)
       ? parsed.theme
       : defaultPreferences().theme;
-    return { pieceStyle, theme };
+    const pointOutDangers =
+      typeof parsed.pointOutDangers === 'boolean'
+        ? parsed.pointOutDangers
+        : defaultPreferences().pointOutDangers;
+    return { pieceStyle, theme, pointOutDangers };
   } catch {
     return defaultPreferences();
   }
