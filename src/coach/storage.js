@@ -1,6 +1,7 @@
 import { DEFAULT_PLAYER_ELO } from './elo';
 
 const STORAGE_KEY = 'chess-coach-profile';
+const SESSION_KEY = 'chess-coach-session';
 
 export const defaultProfile = () => ({
   elo: DEFAULT_PLAYER_ELO,
@@ -70,4 +71,48 @@ export const recordGameResult = (result, opponentElo, updateEloFn) => {
   };
 
   return saveProfile(next);
+};
+
+/**
+ * In-progress coach game (FEN, moves, undo stack, messages).
+ * Cleared explicitly on New game.
+ */
+export const loadSession = () => {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.fen !== 'string') return null;
+    return {
+      fen: parsed.fen,
+      moves: Array.isArray(parsed.moves) ? parsed.moves : [],
+      history: Array.isArray(parsed.history) ? parsed.history : [],
+      verdict: parsed.verdict ?? null,
+      coachMessage: typeof parsed.coachMessage === 'string' ? parsed.coachMessage : '',
+      status: typeof parsed.status === 'string' ? parsed.status : '',
+      gameOver: Boolean(parsed.gameOver),
+      engineElo:
+        typeof parsed.engineElo === 'number' && Number.isFinite(parsed.engineElo)
+          ? parsed.engineElo
+          : null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const saveSession = (session) => {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {
+    /* quota / private mode */
+  }
+};
+
+export const clearSession = () => {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
 };

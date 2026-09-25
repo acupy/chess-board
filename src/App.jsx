@@ -30,50 +30,74 @@ import {
   coachUndo,
   coachWelcome,
 } from './coach/voice';
-import { loadProfile, recordGameResult, setPlayerElo } from './coach/storage';
+import { loadProfile, recordGameResult, setPlayerElo, loadSession, saveSession, clearSession } from './coach/storage';
 import { loadPreferences, updatePreferences, THEME_OPTIONS } from './coach/preferences';
 import { analyze, classifyMove, initEngine, pickMove } from './engine/stockfish';
 import { PIECE_STYLES } from './consts';
 
 const START_POSITION = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+const readInitialSession = () => {
+  const saved = loadSession();
+  if (!saved?.fen || !validateFEN(saved.fen)) return null;
+  return saved;
+};
+
 function App() {
   const initialPrefs = loadPreferences();
-  const [textInput, setTextInput] = useState(START_POSITION);
-  const [position, setPosition] = useState(START_POSITION);
+  const initialSession = readInitialSession();
+  const initialProfile = loadProfile();
+  const initialFen = initialSession?.fen || START_POSITION;
+  const initialEngineElo =
+    initialSession?.engineElo ?? engineEloForPlayer(initialProfile.elo);
+  const restoredGame = Boolean(
+    initialSession &&
+      (initialSession.fen !== START_POSITION ||
+        initialSession.moves?.length > 0 ||
+        initialSession.gameOver)
+  );
+
+  const [textInput, setTextInput] = useState(initialFen);
+  const [position, setPosition] = useState(initialFen);
   const [pieceStyle, setPieceStyle] = useState(initialPrefs.pieceStyle);
   const [theme, setTheme] = useState(initialPrefs.theme);
   const [chessRulesEnforced, setChessRulesEnforced] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
   const [coachMode, setCoachMode] = useState(true);
 
-  const [profile, setProfile] = useState(() => loadProfile());
-  const [engineElo, setEngineElo] = useState(() => engineEloForPlayer(loadProfile().elo));
+  const [profile, setProfile] = useState(initialProfile);
+  const [engineElo, setEngineElo] = useState(initialEngineElo);
   const [busy, setBusy] = useState(false);
-  const [verdict, setVerdict] = useState(null);
-  const [coachMessage, setCoachMessage] = useState('');
-  const [status, setStatus] = useState('');
-  const [gameOver, setGameOver] = useState(false);
+  const [verdict, setVerdict] = useState(initialSession?.verdict ?? null);
+  const [coachMessage, setCoachMessage] = useState(initialSession?.coachMessage || '');
+  const [status, setStatus] = useState(initialSession?.status || '');
+  const [gameOver, setGameOver] = useState(Boolean(initialSession?.gameOver));
   const [engineReady, setEngineReady] = useState(false);
-  const [eloDraft, setEloDraft] = useState(() => String(loadProfile().elo));
-  const [history, setHistory] = useState([]);
-  const [moves, setMoves] = useState([]);
+  const [eloDraft, setEloDraft] = useState(() => String(initialProfile.elo));
+  const [history, setHistory] = useState(initialSession?.history || []);
+  const [moves, setMoves] = useState(initialSession?.moves || []);
   const [hintSquares, setHintSquares] = useState(null);
 
-  const gameEndedRef = useRef(false);
-  const sessionEngineEloRef = useRef(engineElo);
-  const positionRef = useRef(position);
+  const gameEndedRef = useRef(Boolean(initialSession?.gameOver));
+  const sessionEngineEloRef = useRef(initialEngineElo);
+  const positionRef = useRef(initialFen);
   useEffect(() => {
     positionRef.current = position;
   }, [position]);
 
   useEffect(() => {
     let cancelled = false;
-    setStatus('Getting ready…');
+    if (!restoredGame) setStatus('Getting ready…');
     initEngine()
       .then(() => {
-        if (!cancelled) {
-          setEngineReady(true);
+        if (cancelled) return;
+        setEngineReady(true);
+        if (restoredGame) {
+          if (!gameEndedRef.current) {
+            setStatus((prev) => prev || 'Welcome back — your move.');
+            setCoachMessage((prev) => prev || 'Picked up where you left off. Your move.');
+          }
+        } else {
           setStatus('Your move. Good luck!');
           setCoachMessage(coachWelcome());
         }
@@ -86,7 +110,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [restoredGame]);
 
   useEffect(() => {
     setEloDraft(String(profile.elo));
@@ -95,6 +119,21 @@ function App() {
   useEffect(() => {
     document.documentElement.className = theme;
   }, [theme]);
+
+  // Persist coach game so refresh / reopen can continue
+  useEffect(() => {
+    if (!coachMode) return;
+    saveSession({
+      fen: position,
+      moves,
+      history,
+      verdict,
+      coachMessage,
+      status,
+      gameOver,
+      engineElo,
+    });
+  }, [coachMode, position, moves, history, verdict, coachMessage, status, gameOver, engineElo]);
 
   const finishGame = useCallback((result, reason) => {
     if (gameEndedRef.current) return;
@@ -172,6 +211,28 @@ function App() {
     },
     [checkAndFinish]
   );
+
+  // If refresh interrupted the opponent's reply, finish that move on load
+  useEffect(() => {
+    if (!engineReady || !coachMode || gameOver || busy) return;
+    let cancelled = false;
+    try {
+      const game = parseFEN(position);
+      if (isWhiteToMove(game)) return undefined;
+      setBusy(true);
+      setStatus('I’m thinking…');
+      playEngineReply(position).finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    } catch {
+      /* ignore bad fen */
+    }
+    return () => {
+      cancelled = true;
+    };
+    // Only when the engine first becomes ready for a restored mid-turn position
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineReady]);
 
   const handlePlayerMove = useCallback(
     async ({ fen, uci, game }) => {
@@ -306,6 +367,7 @@ function App() {
 
   const onNewGame = () => {
     if (busy) return;
+    clearSession();
     const nextProfile = loadProfile();
     setProfile(nextProfile);
     const nextEngine = engineEloForPlayer(nextProfile.elo);

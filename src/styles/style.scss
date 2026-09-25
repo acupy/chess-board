@@ -188,13 +188,13 @@ header h1.header-brand {
 }
 
 .header-brand-text {
-  display: none;
-  font-size: 16px;
+  display: inline;
+  font-size: 15px;
   letter-spacing: 0.02em;
   text-transform: lowercase;
 
   @media screen and (min-width: 641px) {
-    display: inline;
+    font-size: 16px;
   }
 }
 
