@@ -1,6 +1,6 @@
 {
-  "short_name": "chess analyzer",
-  "name": "chess analyzer",
+  "short_name": "chess coach",
+  "name": "chess coach",
   "icons": [
     {
       "src": "favicon.ico",
@@ -9,5 +9,5 @@
     }
   ],
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "standalone"
 }
