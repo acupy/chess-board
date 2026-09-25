@@ -1,18 +1,17 @@
 # Chess board + coach
 
-A React chess board with **coach mode**: play against a strength-limited [Stockfish](https://stockfishchess.org/) opponent, get move feedback, and optional natural-language coaching via [Ollama](https://ollama.com/).
+A React chess board with **coach mode**: play against a strength-limited [Stockfish](https://stockfishchess.org/) opponent, get move feedback in plain language, and track your Elo.
 
-Built with **Vite**, **React 19**, and a small in-browser chess rules engine.
+Built with **Vite**, **React 19**, and a small in-browser chess rules engine. Coaching lines are **rule-based templates** (no cloud LLM) — grounded in Stockfish scores plus simple board facts (captures, checks, development, etc.).
 
 ![Chess board](public/img/readme/chessboard.png)
 
 ## Features
 
-- Drag-free click-to-move board with legal-move highlighting
+- Click-to-move board with legal-move highlighting
 - **Coach mode**: Stockfish replies at ~your Elo + 80; games update your Elo (standard K-factor)
-- Move classification (excellent → blunder) and move history with undo
-- Check / checkmate indicators (banner + shaking king)
-- Optional Ollama commentary and hints (app still works without it)
+- Move classification (excellent → blunder), friendly coach comments, move history with undo
+- Check / checkmate indicators (banner + king animations)
 - Themes and piece styles (persisted in `localStorage`)
 
 ## Prerequisites
@@ -21,7 +20,6 @@ Built with **Vite**, **React 19**, and a small in-browser chess rules engine.
 | --- | --- |
 | **Node.js** | 18+ recommended (20+ ideal) |
 | **npm** | Comes with Node |
-| **Ollama** (optional) | Needed only for spoken coach tips / hints phrasing |
 
 Stockfish WASM is installed via npm and copied into `public/stockfish/` on `npm install`.
 
@@ -55,45 +53,22 @@ Then open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Production build → `dist/` |
 | `npm run preview` | Preview the production build |
 
-## Ollama setup (optional coach voice)
-
-Coach **play and Elo work without Ollama**. If Ollama is down, the UI falls back to short template messages.
-
-1. Install Ollama: [https://ollama.com/download](https://ollama.com/download)
-2. Start the server (often already running as an app/service):
-
-   ```bash
-   ollama serve
-   ```
-
-3. Pull the default model used by this app (`qwen2.5:7b`):
-
-   ```bash
-   ollama pull qwen2.5:7b
-   ```
-
-4. Keep Vite running. Requests to `/api/ollama` are proxied to `http://127.0.0.1:11434` (see `vite.config.js`).
-
-You should see live coach lines in the side panel when Ollama is up. If the model is missing or the server is stopped, a yellow note appears and play continues with fallback text.
-
-### Using another model
-
-Change `DEFAULT_MODEL` in `src/coach/ollama.js`, then `ollama pull <that-model>`.
-
 ## Coach mode tips
 
-1. Open **Config** (gear) and enable **Coach mode**.
+1. Open **Config** (gear) and enable **Coach mode** (on by default).
 2. Set your starting Elo if you like (opponent strength tracks it).
-3. Play as White; after each move the engine evaluates, comments, and replies.
+3. Play as White; after each move you get a verdict, a short why, and a reply.
 4. Use **Hint**, **Undo**, **Resign**, and **New game** in the coach panel.
+
+Everything runs in the browser — no separate AI server required.
 
 ## Project layout
 
 ```
 src/
-  chess/          Rules, FEN, UCI helpers
+  chess/          Rules, FEN, UCI helpers, move “why” facts
   engine/         Stockfish worker client + move classification
-  coach/          Elo, localStorage profile, Ollama client
+  coach/          Elo, localStorage profile, template coach voice
   App.jsx         App shell + coach game loop
   Board.jsx       Board UI
   CoachPanel.jsx  Side panel

@@ -66,7 +66,6 @@ function CoachPanel({
   canUndo = false,
   onNewGame,
   onResign,
-  ollamaStatus,
   theme = 'gray',
   moves = [],
 }) {
@@ -111,10 +110,9 @@ function CoachPanel({
           )}
           <p className="coach-message">
             {coachMessage ||
-              'Make a move — I will comment on it and reply at a level just above yours.'}
+              'Make a move — I’ll cheer the good ones and be honest about the rest.'}
           </p>
           {status && <p className="coach-status">{status}</p>}
-          {ollamaStatus && <p className="coach-ollama-note">{ollamaStatus}</p>}
         </div>
       </div>
 

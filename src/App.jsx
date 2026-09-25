@@ -11,7 +11,6 @@ import Board from './Board';
 import CoachPanel from './CoachPanel';
 import {
   applyUciMove,
-  describeUciMove,
   GAME_RESULT,
   getGameResult,
   getWinner,
@@ -28,8 +27,9 @@ import {
   coachGameOver,
   coachHint,
   coachOnMove,
-  OllamaUnavailableError,
-} from './coach/ollama';
+  coachUndo,
+  coachWelcome,
+} from './coach/voice';
 import { loadProfile, recordGameResult, setPlayerElo } from './coach/storage';
 import { loadPreferences, updatePreferences, THEME_OPTIONS } from './coach/preferences';
 import { analyze, classifyMove, initEngine, pickMove } from './engine/stockfish';
@@ -53,7 +53,6 @@ function App() {
   const [verdict, setVerdict] = useState(null);
   const [coachMessage, setCoachMessage] = useState('');
   const [status, setStatus] = useState('');
-  const [ollamaStatus, setOllamaStatus] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const [engineReady, setEngineReady] = useState(false);
   const [eloDraft, setEloDraft] = useState(() => String(loadProfile().elo));
@@ -70,18 +69,18 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    setStatus('Loading Stockfish…');
+    setStatus('Getting ready…');
     initEngine()
       .then(() => {
         if (!cancelled) {
           setEngineReady(true);
           setStatus('Your move. Good luck!');
-          setCoachMessage('I play a bit stronger than your current Elo — use that to improve.');
+          setCoachMessage(coachWelcome());
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          setStatus(`Engine failed to load: ${err.message}`);
+          setStatus(`Couldn’t load the opponent: ${err.message}`);
         }
       });
     return () => {
@@ -97,64 +96,42 @@ function App() {
     document.documentElement.className = theme;
   }, [theme]);
 
-  const softCoach = useCallback(async (fn, fallback) => {
-    try {
-      const text = await fn();
-      setOllamaStatus('');
-      return text;
-    } catch (err) {
-      if (err instanceof OllamaUnavailableError) {
-        setOllamaStatus(err.message);
-        return fallback;
-      }
-      setOllamaStatus(err.message || 'Coach unavailable');
-      return fallback;
-    }
+  const finishGame = useCallback((result, reason) => {
+    if (gameEndedRef.current) return;
+    gameEndedRef.current = true;
+    setGameOver(true);
+
+    const nextProfile = recordGameResult(result, sessionEngineEloRef.current, updateElo);
+    setProfile(nextProfile);
+
+    const label =
+      result === 'win' ? 'You won' : result === 'draw' ? 'Draw' : 'You lost';
+    setStatus(
+      `${label}${reason ? ` — ${reason}` : ''}. Elo ${nextProfile.elo} (${nextProfile.lastDelta >= 0 ? '+' : ''}${nextProfile.lastDelta})`
+    );
+
+    setCoachMessage(
+      coachGameOver({
+        result,
+        playerElo: nextProfile.elo,
+        eloDelta: nextProfile.lastDelta || 0,
+        reason,
+      })
+    );
   }, []);
 
-  const finishGame = useCallback(
-    async (result, reason) => {
-      if (gameEndedRef.current) return;
-      gameEndedRef.current = true;
-      setGameOver(true);
-
-      const nextProfile = recordGameResult(result, sessionEngineEloRef.current, updateElo);
-      setProfile(nextProfile);
-
-      const label =
-        result === 'win' ? 'You won' : result === 'draw' ? 'Draw' : 'You lost';
-      setStatus(`${label}${reason ? ` — ${reason}` : ''}. Elo ${nextProfile.elo} (${nextProfile.lastDelta >= 0 ? '+' : ''}${nextProfile.lastDelta})`);
-
-      const msg = await softCoach(
-        () =>
-          coachGameOver({
-            result,
-            playerElo: nextProfile.elo,
-            eloDelta: nextProfile.lastDelta || 0,
-          }),
-        result === 'win'
-          ? 'Nice game — that win bumps your rating. Ready for a tougher opponent next time?'
-          : result === 'draw'
-            ? 'A hard-fought draw. Review the mistakes and try again.'
-            : 'Tough loss. Look at the marked mistakes and challenge yourself again.'
-      );
-      setCoachMessage(msg);
-    },
-    [softCoach]
-  );
-
   const checkAndFinish = useCallback(
-    async (game) => {
+    (game) => {
       const result = getGameResult(game);
       if (result === GAME_RESULT.PLAYING) return false;
 
       const winner = getWinner(game);
       if (result === GAME_RESULT.STALEMATE || winner === 'draw') {
-        await finishGame('draw', 'stalemate');
+        finishGame('draw', 'stalemate');
       } else if (winner === 'white') {
-        await finishGame('win', 'checkmate');
+        finishGame('win', 'checkmate');
       } else {
-        await finishGame('loss', 'checkmate');
+        finishGame('loss', 'checkmate');
       }
       return true;
     },
@@ -163,18 +140,18 @@ function App() {
 
   const playEngineReply = useCallback(
     async (fenAfterPlayer) => {
-      setStatus('Coach is thinking…');
+      setStatus('I’m thinking…');
       const game = parseFEN(fenAfterPlayer);
       const rawUci = await pickMove(fenAfterPlayer, sessionEngineEloRef.current);
       const uci = pickLegalEngineMove(game, rawUci);
       if (!uci) {
-        setStatus('Engine found no legal move.');
+        setStatus('I couldn’t find a legal move.');
         return;
       }
 
       const next = applyUciMove(game, uci);
       if (!next) {
-        setStatus(`Engine suggested illegal move ${rawUci}; skipped.`);
+        setStatus('I stumbled on an illegal reply — your turn again.');
         return;
       }
 
@@ -184,7 +161,7 @@ function App() {
       setMoves((prev) => [...prev, { uci, by: 'engine' }]);
       setHintSquares(null);
 
-      const ended = await checkAndFinish(next);
+      const ended = checkAndFinish(next);
       if (!ended) {
         if (isInCheck(next.board, isWhiteToMove(next))) {
           setStatus('Check! Your move.');
@@ -216,7 +193,7 @@ function App() {
       setTextInput(fen);
       setMoves((prev) => [...prev, { uci, by: 'player' }]);
       setHintSquares(null);
-      setStatus('Evaluating your move…');
+      setStatus('Looking at your move…');
 
       try {
         const beforeGame = parseFEN(fenBefore);
@@ -243,43 +220,27 @@ function App() {
           return next;
         });
 
-        const playedDescription = describeUciMove(beforeGame, uci);
-        const bestDescription = classification.bestMove
-          ? describeUciMove(beforeGame, classification.bestMove)
-          : null;
-
-        const fallback =
-          classification.verdict === 'excellent' || classification.verdict === 'good'
-            ? `Solid — ${classification.verdict === 'excellent' ? 'that was the engine’s idea (or very close).' : 'a good choice.'}`
-            : `That was a ${classification.verdict}. The engine preferred ${bestDescription || 'another idea'}.`;
-
-        const msg = await softCoach(
-          () =>
-            coachOnMove({
-              fen: fenBefore,
-              playedMove: uci,
-              playedDescription,
-              bestMove: classification.bestMove,
-              bestDescription,
-              verdict: classification.verdict,
-              lossCp: classification.lossCp,
-            }),
-          fallback
+        setCoachMessage(
+          coachOnMove({
+            gameBefore: beforeGame,
+            playedUci: uci,
+            bestUci: classification.bestMove,
+            verdict: classification.verdict,
+            lossCp: classification.lossCp,
+          })
         );
-        setCoachMessage(msg);
 
-        const ended = await checkAndFinish(game);
+        const ended = checkAndFinish(game);
         if (!ended) {
           if (isInCheck(game.board, isWhiteToMove(game))) {
-            setStatus('Check! Coach is thinking…');
+            setStatus('Check! I’m thinking…');
           }
           await playEngineReply(fen);
         }
       } catch (err) {
-        setStatus(err.message || 'Something went wrong evaluating the move.');
-        // Still try to let the engine reply so the game continues
+        setStatus(err.message || 'Something went wrong looking at that move.');
         try {
-          const ended = await checkAndFinish(game);
+          const ended = checkAndFinish(game);
           if (!ended) await playEngineReply(fen);
         } catch {
           /* ignore */
@@ -288,7 +249,7 @@ function App() {
         setBusy(false);
       }
     },
-    [coachMode, gameOver, busy, softCoach, checkAndFinish, playEngineReply, verdict, coachMessage, status, moves]
+    [coachMode, gameOver, busy, checkAndFinish, playEngineReply, verdict, coachMessage, status, moves]
   );
 
   const onUndo = () => {
@@ -298,47 +259,33 @@ function App() {
     setPosition(previous.fen);
     setTextInput(previous.fen);
     setVerdict(previous.verdict ?? null);
-    setCoachMessage(previous.coachMessage || 'Move taken back. Your turn again.');
+    setCoachMessage(previous.coachMessage || coachUndo());
     setStatus(previous.status || 'Your move.');
     setMoves(previous.moves || []);
     setHintSquares(null);
-    setOllamaStatus('');
   };
 
   const onHint = async () => {
     if (busy || gameOver) return;
     setBusy(true);
-    setStatus('Looking for a hint…');
+    setStatus('Looking for a nudge…');
     try {
       const game = parseFEN(position);
       const analysis = await analyze(position, 800);
       const best = pickLegalEngineMove(game, analysis.bestMove, analysis.pv);
       if (!best) {
-        setCoachMessage('No legal hint right now — the position may be finished.');
+        setCoachMessage(coachHint({ game, bestUci: null }));
         setHintSquares(null);
         setStatus('Your move.');
         return;
       }
 
-      const description = describeUciMove(game, best);
       const parsed = parseUciMove(best);
       if (parsed) {
         setHintSquares({ from: parsed.from, to: parsed.to });
       }
 
-      const reliable = `Hint: ${description}.`;
-      const fluff = await softCoach(
-        () =>
-          coachHint({
-            fen: position,
-            bestMove: best,
-            moveDescription: description,
-          }),
-        ''
-      );
-
-      // Always lead with our verified move so the LLM cannot replace it
-      setCoachMessage(fluff ? `${reliable} ${fluff}` : reliable);
+      setCoachMessage(coachHint({ game, bestUci: best }));
       setStatus('Your move.');
     } catch (err) {
       setStatus(err.message || 'Hint failed.');
@@ -351,7 +298,7 @@ function App() {
     if (busy || gameOver) return;
     setBusy(true);
     try {
-      await finishGame('loss', 'resignation');
+      finishGame('loss', 'resignation');
     } finally {
       setBusy(false);
     }
@@ -367,14 +314,13 @@ function App() {
     gameEndedRef.current = false;
     setGameOver(false);
     setVerdict(null);
-    setOllamaStatus('');
     setHistory([]);
     setMoves([]);
     setHintSquares(null);
     setPosition(START_POSITION);
     setTextInput(START_POSITION);
-    setCoachMessage('New game — I will play a little above your Elo. Show me what you have.');
-    setStatus(engineReady ? 'Your move.' : 'Loading Stockfish…');
+    setCoachMessage(coachWelcome());
+    setStatus(engineReady ? 'Your move.' : 'Getting ready…');
   };
 
   const onFENChanged = (event) => {
@@ -440,7 +386,6 @@ function App() {
               canUndo={!gameOver && history.length > 0}
               onNewGame={onNewGame}
               onResign={onResign}
-              ollamaStatus={ollamaStatus}
               theme={theme}
               moves={moves}
             />

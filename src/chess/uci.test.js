@@ -4,6 +4,7 @@ import {
   applyUciMove,
   coordsToUci,
   describeUciMove,
+  explainMoveIdea,
   GAME_RESULT,
   getGameResult,
   getWinner,
@@ -56,6 +57,14 @@ describe('UCI helpers', () => {
     const game = parseFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     expect(describeUciMove(game, 'e2e4')).toBe('pawn e2 to e4');
     expect(describeUciMove(game, 'g1f3')).toBe('knight g1 to f3');
+  });
+
+  it('names captured pieces and check, and does not call a recapture a developing move', () => {
+    const game = parseFEN('r1bqkbnr/1p1npppp/p2p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 0 5');
+    expect(describeUciMove(game, 'b5d7')).toBe('bishop b5 takes knight on d7 with check');
+    expect(explainMoveIdea(game, 'b5d7')).toBe('Black has to recapture or move the king.');
+    expect(explainMoveIdea(game, 'b5d7')).not.toMatch(/develop/i);
+    expect(explainMoveIdea(game, 'b1c3')).toMatch(/develops your knight/i);
   });
 
   it('only accepts legal engine candidates', () => {

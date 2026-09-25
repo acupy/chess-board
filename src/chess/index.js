@@ -19,6 +19,7 @@ export {
   parseUciMove,
   coordsToUci,
   describeUciMove,
+  explainMoveIdea,
   pickLegalEngineMove,
   hasLegalMoves,
   GAME_RESULT,

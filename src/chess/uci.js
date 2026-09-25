@@ -35,44 +35,106 @@ const PIECE_NAMES = {
   k: 'king',
 };
 
-/**
- * Human-readable description of a UCI move in the given position.
- * e.g. "knight g1 to f3", "pawn e4 takes d5", "castle kingside"
- */
-export const describeUciMove = (game, uci) => {
+const moveFacts = (game, uci) => {
   const parsed = parseUciMove(uci);
-  if (!parsed || !game) {
-    if (!uci || uci.length < 4) return uci || '';
-    const promo = uci.length >= 5 ? `, promote to ${PIECE_NAMES[uci[4].toLowerCase()] || uci[4]}` : '';
-    return `${uci.slice(0, 2)} to ${uci.slice(2, 4)}${promo}`;
-  }
+  if (!parsed || !game) return null;
 
   const { from, to, promotion } = parsed;
-  const fromSq = coordsToSquare(from);
-  const toSq = coordsToSquare(to);
   const piece = game.board[from[0]]?.[from[1]];
-  if (!piece || piece === EMPTY) return `${fromSq} to ${toSq}`;
-
-  const name = PIECE_NAMES[piece.toLowerCase()] || 'piece';
-
-  // Castling
-  if (piece.toLowerCase() === 'k' && Math.abs(from[1] - to[1]) === 2) {
-    return to[1] > from[1] ? 'castle kingside' : 'castle queenside';
-  }
+  if (!piece || piece === EMPTY) return null;
 
   const target = game.board[to[0]][to[1]];
+  const isCastle = piece.toLowerCase() === 'k' && Math.abs(from[1] - to[1]) === 2;
   const isEp =
     piece.toLowerCase() === 'p' &&
     game.enPassant &&
     to[0] === game.enPassant[0] &&
     to[1] === game.enPassant[1];
-  const isCapture = (target && target !== EMPTY) || isEp;
+  const capturedPiece = isEp ? 'p' : target && target !== EMPTY ? target : null;
+  const next = applyUciMove(game, uci);
+  const givesCheck = Boolean(next && isInCheck(next.board, isWhiteToMove(next)));
+  const backRank = piece === piece.toUpperCase() ? 7 : 0;
+  const leavesBackRank =
+    from[0] === backRank &&
+    to[0] !== backRank &&
+    piece.toLowerCase() !== 'k' &&
+    piece.toLowerCase() !== 'p';
 
-  let text = isCapture ? `${name} ${fromSq} takes on ${toSq}` : `${name} ${fromSq} to ${toSq}`;
-  if (promotion) {
-    text += `, promote to ${PIECE_NAMES[promotion] || promotion}`;
+  return {
+    from,
+    to,
+    fromSq: coordsToSquare(from),
+    toSq: coordsToSquare(to),
+    piece,
+    name: PIECE_NAMES[piece.toLowerCase()] || 'piece',
+    promotion,
+    isCastle,
+    castleSide: isCastle ? (to[1] > from[1] ? 'kingside' : 'queenside') : null,
+    isCapture: Boolean(capturedPiece),
+    capturedName: capturedPiece ? PIECE_NAMES[capturedPiece.toLowerCase()] : null,
+    givesCheck,
+    leavesBackRank,
+  };
+};
+
+/**
+ * Human-readable description of a UCI move in the given position.
+ * e.g. "knight g1 to f3", "pawn e4 takes pawn on d5", "castle kingside"
+ */
+export const describeUciMove = (game, uci) => {
+  const facts = moveFacts(game, uci);
+  if (!facts) {
+    if (!uci || uci.length < 4) return uci || '';
+    const promo = uci.length >= 5 ? `, promote to ${PIECE_NAMES[uci[4].toLowerCase()] || uci[4]}` : '';
+    return `${uci.slice(0, 2)} to ${uci.slice(2, 4)}${promo}`;
   }
+
+  if (facts.isCastle) {
+    return facts.castleSide === 'kingside' ? 'castle kingside' : 'castle queenside';
+  }
+
+  let text = facts.isCapture
+    ? `${facts.name} ${facts.fromSq} takes ${facts.capturedName} on ${facts.toSq}`
+    : `${facts.name} ${facts.fromSq} to ${facts.toSq}`;
+  if (facts.promotion) {
+    text += `, promote to ${PIECE_NAMES[facts.promotion] || facts.promotion}`;
+  }
+  if (facts.givesCheck) text += ' with check';
   return text;
+};
+
+/**
+ * Factual one-line reason for a hint. Derived from the board, not the LLM.
+ */
+export const explainMoveIdea = (game, uci) => {
+  const facts = moveFacts(game, uci);
+  if (!facts) return '';
+
+  if (facts.isCastle) {
+    return 'That tucks your king away and brings a rook toward the center.';
+  }
+  if (facts.promotion) {
+    const promoName = PIECE_NAMES[facts.promotion] || 'piece';
+    return facts.givesCheck
+      ? `Your pawn becomes a ${promoName} and checks the king.`
+      : `Your pawn becomes a ${promoName}.`;
+  }
+  if (facts.isCapture && facts.givesCheck) {
+    return 'Black has to recapture or move the king.';
+  }
+  if (facts.isCapture) {
+    return `You’re trading your ${facts.name} for Black’s ${facts.capturedName}.`;
+  }
+  if (facts.givesCheck) {
+    return 'That checks the king, so Black has to answer.';
+  }
+  if (facts.leavesBackRank) {
+    return `That develops your ${facts.name} into the game.`;
+  }
+  if (facts.name === 'pawn' && ['d4', 'e4', 'd5', 'e5'].includes(facts.toSq)) {
+    return 'That claims space in the center.';
+  }
+  return `That improves your ${facts.name}’s placement.`;
 };
 
 /**
