@@ -71,14 +71,14 @@ body {
   font-weight: 400;
   letter-spacing: 0.01em;
   background-attachment: fixed;
-  overflow: hidden;
-  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 html {
   box-sizing: border-box;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 *,
@@ -88,7 +88,7 @@ html {
 }
 
 #root {
-  height: 100%;
+  min-height: 100%;
 }
 
 /* Carbon / metal worker */
@@ -130,9 +130,7 @@ html {
 /* PAGE STYLES */
 
 .app-shell {
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -142,17 +140,24 @@ header {
   position: relative;
   z-index: 9999;
   flex: 0 0 44px;
-  padding: 0 12px;
+  padding: 0 10px;
   height: 44px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 
   .config-button {
+    flex: 0 0 auto;
     font-size: 18px;
     padding: 6px;
     cursor: pointer;
     line-height: 1;
+  }
+
+  @media screen and (min-width: 641px) {
+    padding: 0 12px;
+    gap: 8px;
   }
 }
 
@@ -176,22 +181,28 @@ footer {
 }
 
 header h1.header-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   float: none;
   margin: 0;
+  padding: 0;
   font-size: 18px;
   line-height: 1;
-  opacity: 0.9;
+  opacity: 0.95;
   font-weight: 700;
+  color: inherit;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .header-brand-text {
   display: inline;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 0.02em;
   text-transform: lowercase;
+  white-space: nowrap;
+  color: inherit;
 
   @media screen and (min-width: 641px) {
     font-size: 16px;
@@ -203,11 +214,19 @@ header h1.header-brand {
   margin-right: 0;
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  font-size: 15px;
+  gap: 6px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   opacity: 0.95;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+
+  @media screen and (min-width: 641px) {
+    gap: 8px;
+    font-size: 15px;
+  }
 }
 
 .header-elo-label {
@@ -254,19 +273,24 @@ header h1.header-brand {
   margin: 0;
   padding: 8px 10px;
   flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   box-sizing: border-box;
 
   @media screen and (max-width: 640px) {
     padding: 2px 2px 4px;
     gap: 4px;
+    align-items: stretch;
+  }
+
+  /* Phone landscape: fit board + coach in one row when possible */
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    padding: 4px 6px;
+    gap: 6px;
     align-items: stretch;
   }
 }
@@ -305,7 +329,7 @@ $SMALL_BOARD_FONT_SIZE: 1.2rem;
 $MEDIUM_BOARD_FONT_SIZE: 1.5rem;
 $BIG_BOARD_FONT_SIZE: 1.7rem;
 
-.board-wrapper, .sub-board-wrapper {
+.board-wrapper {
   @include media(width, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
   @include media(height, $SMALL_BOARD_SIZE, $MEDIUM_BOARD_SIZE, $BIG_BOARD_SIZE);
   @include media(font-size, $SMALL_BOARD_FONT_SIZE, $MEDIUM_BOARD_FONT_SIZE, $BIG_BOARD_FONT_SIZE);
@@ -326,12 +350,28 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.25);
   flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
   max-width: 100%;
 
-  @media screen and (max-width: 640px) {
-    // Use almost full width; leave a slim strip for the coach panel below
+  @media screen and (max-width: 640px) and (orientation: portrait) {
+    // Use almost full width; leave room for the coach panel below
     width: min(100vw - 4px, calc(100dvh - 168px));
-    height: min(100vw - 4px, calc(100dvh - 168px));
+    height: auto;
+    max-width: 100%;
+    border-radius: 6px;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    // Size by height; leave a slim min strip for coach (coach fills the rest)
+    width: min(calc(100dvh - 52px), calc(100vw - 140px));
+    height: auto;
+    max-width: calc(100vw - 140px);
+    max-height: calc(100dvh - 52px);
+    flex: 0 0 auto;
+    font-size: 0.7rem;
     border-radius: 6px;
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.35),
@@ -376,13 +416,22 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
 }
 
 .sub-board-wrapper {
+  width: 100%;
   @include media(height, $SMALL_BOARD_SIZE*0.8, $MEDIUM_BOARD_SIZE*0.8, $BIG_BOARD_SIZE*0.8);
 
+  display: flex;
+  flex-wrap: nowrap;
+  align-content: flex-start;
   box-shadow: none;
   background: transparent;
   border: none;
+  border-radius: 0;
+  flex: 0 0 auto;
+  max-width: none;
+  aspect-ratio: auto;
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px),
+    screen and (orientation: landscape) and (max-height: 500px) {
     height: 88%;
   }
 }
@@ -397,7 +446,8 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     inset 0 0 0 1px rgba(0, 0, 0, 0.2),
     0 2px 8px rgba(0, 0, 0, 0.2);
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px),
+    screen and (orientation: landscape) and (max-height: 500px) {
     width: 88%;
   }
 }
@@ -630,6 +680,12 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
 
 .rank-index, .column-index {
   font-weight: bold;
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    font-size: 0.65em;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
 }
 
 .rank-index-container {
@@ -637,7 +693,8 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   height: 100%;
   width: 10%;
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px),
+    screen and (orientation: landscape) and (max-height: 500px) {
     width: 6%;
   }
 }
@@ -804,7 +861,8 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   width: 80%;
   height: 10%;
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px),
+    screen and (orientation: landscape) and (max-height: 500px) {
     margin-left: 6%;
     width: 88%;
     height: 6%;
@@ -815,7 +873,8 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   align-items: center;
   font-size: 20px;
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px),
+    screen and (orientation: landscape) and (max-height: 500px) {
     font-size: 12px;
   }
 }
@@ -917,14 +976,21 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   justify-content: center;
   gap: 10px;
   max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px) and (orientation: portrait) {
     flex-direction: column;
     align-items: stretch;
     flex-wrap: nowrap;
     gap: 4px;
+    width: 100%;
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
     width: 100%;
   }
 }
@@ -942,7 +1008,6 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   gap: 6px;
   box-sizing: border-box;
   min-height: 0;
-  overflow: hidden;
 
   @media screen and (min-width: 641px) {
     flex: 0 0 280px;
@@ -958,7 +1023,7 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     max-height: $BIG_BOARD_SIZE;
   }
 
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 640px) and (orientation: portrait) {
     width: 100%;
     max-width: none;
     flex: 1 1 auto;
@@ -966,6 +1031,18 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     border-radius: 8px;
     padding: 6px 8px;
     gap: 4px;
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 120px;
+    max-width: none;
+    align-self: stretch;
+    max-height: calc(100dvh - 52px);
+    border-radius: 8px;
+    padding: 4px 6px;
+    gap: 3px;
   }
 }
 
@@ -976,6 +1053,10 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   gap: 10px;
   align-items: flex-start;
   overflow: hidden;
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    gap: 6px;
+  }
 }
 
 .coach-avatar {
@@ -995,6 +1076,13 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     width: 44px;
     height: 44px;
     border-radius: 10px;
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
   }
 }
 
@@ -1060,6 +1148,12 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     font-size: 12px;
     -webkit-line-clamp: 3;
   }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    font-size: 11px;
+    line-height: 1.25;
+    -webkit-line-clamp: 4;
+  }
 }
 
 .coach-status {
@@ -1086,6 +1180,10 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   @media screen and (min-width: 641px) {
     display: none;
   }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    display: flex;
+  }
 }
 
 .coach-move-list--full {
@@ -1099,6 +1197,10 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
 
   @media screen and (min-width: 641px) {
     display: block;
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    display: none;
   }
 }
 
