@@ -52,8 +52,19 @@ Then open [http://localhost:3000](http://localhost:3000).
 | `npm test` | Unit tests (Vitest) |
 | `npm run build` | Production build → `dist/` |
 | `npm run preview` | Preview the production build |
+| `npm run deploy` | Build and deploy to Firebase Hosting (`chess-savvy`) |
 
-## Coach mode tips
+## Deploy (Firebase Hosting)
+
+Requires the [Firebase CLI](https://firebase.google.com/docs/cli) and login (`firebase login`).
+
+```bash
+npm run deploy
+```
+
+This builds the Vite app into `dist/` and deploys that folder (see `firebase.json`). Live site: project **chess-savvy**.
+
+GitHub Actions also deploy on push to `master` (see `.github/workflows/`).
 
 1. Open **Config** (gear) and enable **Coach mode** (on by default).
 2. Set your starting Elo if you like (opponent strength tracks it).

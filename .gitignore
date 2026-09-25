@@ -13,6 +13,9 @@
 # Stockfish WASM copied from node_modules on postinstall
 /public/stockfish
 
+# Firebase
+.firebase
+
 # misc
 .DS_Store
 .env.local
