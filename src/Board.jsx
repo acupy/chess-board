@@ -12,6 +12,7 @@ import {
   GAME_RESULT,
   getGameResult,
   getLegalMoveMatrix,
+  getWinner,
   isInCheck,
   isWhiteToMove,
   parseFEN,
@@ -136,29 +137,31 @@ function Board({
   const isCheckmate = gameResult === GAME_RESULT.CHECKMATE;
   const isStalemate = gameResult === GAME_RESULT.STALEMATE;
   const checkedKing = inCheck ? findKing(game.board, whiteToMove) : null;
+  const winner = isCheckmate ? getWinner(game) : null;
 
-  const statusLabel = isCheckmate
-    ? 'Checkmate!'
-    : isStalemate
-      ? 'Stalemate'
-      : inCheck
-        ? 'Check!'
-        : null;
+  const mateAlert =
+    isCheckmate && winner === 'white'
+      ? 'Checkmate — White wins'
+      : isCheckmate && winner === 'black'
+        ? 'Checkmate — Black wins'
+        : isStalemate
+          ? 'Stalemate — Draw'
+          : null;
 
   return (
     <div
-      className={`board-wrapper board-theme-${pieceStyle || 'cburnett'}${interactionDisabled ? ' board-disabled' : ''}${inCheck ? ' in-check' : ''}${isCheckmate ? ' in-checkmate' : ''}`}
+      className={`board-wrapper board-theme-${pieceStyle || 'cburnett'}${interactionDisabled ? ' board-disabled' : ''}${inCheck && !isCheckmate ? ' in-check' : ''}${isCheckmate ? ' in-checkmate' : ''}`}
       onKeyDown={onRemoveSelectedPiece}
       onBlur={() => setSelected([-1, -1])}
       tabIndex="0"
     >
-      {statusLabel && (
+      {mateAlert && (
         <div
-          className={`board-alert ${isCheckmate ? 'alert-mate' : isStalemate ? 'alert-stale' : 'alert-check'}`}
+          className={`board-alert ${isCheckmate ? 'alert-mate' : 'alert-stale'}`}
           role="status"
           aria-live="polite"
         >
-          {statusLabel}
+          {mateAlert}
         </div>
       )}
       <div className="column-index-container">
@@ -213,7 +216,8 @@ function Board({
                         piece={cell}
                         pieceStyle={pieceStyle}
                         isSelected={ridx === selected[0] && cidx === selected[1]}
-                        inCheck={Boolean(isKingChecked)}
+                        inCheck={Boolean(isKingChecked) && !isCheckmate}
+                        isCheckmated={Boolean(isKingChecked) && isCheckmate}
                         selectPiece={() => selectPiece(ridx, cidx)}
                       />
                     )}
@@ -230,7 +234,9 @@ function Board({
           <div style={{ marginLeft: 'auto' }}>
             {busy ? 'thinking · ' : ''}
             {isCheckmate ? (
-              <span className="status-checkmate">checkmate · </span>
+              <span className="status-checkmate">
+                checkmate · {winner === 'white' ? 'White' : 'Black'} wins ·{' '}
+              </span>
             ) : inCheck ? (
               <span className="status-check">check · </span>
             ) : null}

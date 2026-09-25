@@ -18,7 +18,7 @@ const FONT_AWESOME_PIECES = {
   K: faChessKing,
 };
 
-function Piece({ piece, pieceStyle, isSelected, inCheck = false, selectPiece }) {
+function Piece({ piece, pieceStyle, isSelected, inCheck = false, isCheckmated = false, selectPiece }) {
   const meta = getPieceStyleMeta(pieceStyle);
   const pieceIcon = FONT_AWESOME_PIECES[piece.toUpperCase()];
   const isWhite = piece === piece.toUpperCase();
@@ -62,9 +62,10 @@ function Piece({ piece, pieceStyle, isSelected, inCheck = false, selectPiece }) 
   }
 
   const baseClass = isSelected ? 'selected-piece-wrapper' : 'piece-wrapper';
+  const stateClass = isCheckmated ? ' king-checkmated' : inCheck ? ' king-in-check' : '';
   return (
     <div
-      className={`${baseClass}${inCheck ? ' king-in-check' : ''}`}
+      className={`${baseClass}${stateClass}`}
       onMouseUp={(event) => {
         event.stopPropagation();
         selectPiece();

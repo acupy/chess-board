@@ -536,24 +536,21 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   transform: translateX(-50%);
   z-index: 20;
   pointer-events: none;
-  padding: 6px 18px;
+  padding: 8px 20px;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   animation: alert-pop 0.35s ease-out;
-
-  &.alert-check {
-    background: rgba(190, 55, 45, 0.92);
-    color: #fff;
-  }
 
   &.alert-mate {
     background: rgba(120, 20, 20, 0.95);
     color: #fff;
-    font-size: 22px;
+    font-size: 17px;
+    max-width: 86%;
+    line-height: 1.25;
   }
 
   &.alert-stale {
@@ -595,10 +592,41 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   }
 }
 
+/* Tip over, sink, and fade — stays fallen */
+@keyframes king-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    filter: none;
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(2px) rotate(-28deg) scale(1.02);
+    filter: saturate(0.7);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(10px) rotate(-78deg) scale(0.92);
+    filter: grayscale(0.85) brightness(0.75);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(14px) rotate(-90deg) scale(0.88);
+    filter: grayscale(1) brightness(0.55);
+    opacity: 0.55;
+  }
+}
+
 .piece-wrapper.king-in-check,
 .selected-piece-wrapper.king-in-check {
   animation: king-shake 0.55s ease-in-out infinite;
   filter: drop-shadow(0 0 6px rgba(224, 80, 60, 0.85));
+}
+
+.piece-wrapper.king-checkmated,
+.selected-piece-wrapper.king-checkmated {
+  animation: king-fall 0.9s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .check-field {
@@ -607,6 +635,16 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     circle at center,
     rgba(220, 60, 45, 0.45) 0%,
     rgba(220, 60, 45, 0.18) 70%,
+    transparent 100%
+  );
+}
+
+.board-wrapper.in-checkmate .check-field {
+  box-shadow: inset 0 0 0 3px rgba(90, 20, 20, 0.95);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(40, 10, 10, 0.55) 0%,
+    rgba(80, 20, 20, 0.25) 65%,
     transparent 100%
   );
 }
@@ -913,13 +951,6 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   margin: 8px 0 0;
   font-size: 13px;
   opacity: 0.75;
-}
-
-.coach-ollama-note {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: #e0b070;
-  line-height: 1.35;
 }
 
 .coach-move-list {
