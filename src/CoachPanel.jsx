@@ -1,4 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faFlag,
+  faLightbulb,
+  faPlus,
+  faRotateLeft,
+} from '@fortawesome/free-solid-svg-icons';
 import CoachAvatar, { moodFromVerdict } from './CoachAvatar';
 
 const VERDICT_LABELS = {
@@ -16,6 +23,8 @@ const VERDICT_SHORT = {
   mistake: '?',
   blunder: '??',
 };
+
+const HISTORY_WINDOW = 2;
 
 /** Format UCI like e2e4 → e2–e4, e7e8q → e7–e8=Q */
 function formatUci(uci) {
@@ -53,9 +62,41 @@ function MoveCell({ move }) {
   );
 }
 
+function MoveRows({ rows }) {
+  if (rows.length === 0) {
+    return <p className="coach-move-empty">No moves yet</p>;
+  }
+  return (
+    <ol className="coach-move-rows">
+      {rows.map((row) => (
+        <li key={row.n} className="coach-move-row">
+          <span className="coach-move-num">{row.n}.</span>
+          <MoveCell move={row.white} />
+          <MoveCell move={row.black} />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function ActionButton({ className, onClick, disabled, icon, label }) {
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+    >
+      <FontAwesomeIcon icon={icon} className="coach-btn-icon" />
+      <span className="coach-btn-label">{label}</span>
+    </button>
+  );
+}
+
 function CoachPanel({
   profile,
-  engineElo,
   verdict,
   coachMessage,
   status,
@@ -70,8 +111,24 @@ function CoachPanel({
   moves = [],
 }) {
   const mood = moodFromVerdict(verdict, { busy, gameOver, status });
-  const listRef = useRef(null);
   const rows = pairMoves(moves);
+  const listRef = useRef(null);
+  // null = follow the latest moves (mobile skipper)
+  const [historyEnd, setHistoryEnd] = useState(null);
+  const followLatest = historyEnd == null;
+  const end = followLatest ? rows.length : Math.min(historyEnd, rows.length);
+  const start = Math.max(0, end - HISTORY_WINDOW);
+  const visible = rows.slice(start, end);
+  const canOlder = start > 0;
+  const canNewer = end < rows.length;
+
+  const prevLen = useRef(moves.length);
+  useEffect(() => {
+    if (moves.length !== prevLen.current) {
+      prevLen.current = moves.length;
+      if (followLatest) setHistoryEnd(null);
+    }
+  }, [moves.length, followLatest]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -80,26 +137,6 @@ function CoachPanel({
 
   return (
     <div className="coach-panel">
-      <div className="coach-panel-header">
-        <div className="coach-elo-block">
-          <span className="coach-elo-label">Your Elo</span>
-          <span className="coach-elo-value">{profile.elo}</span>
-          {typeof profile.lastDelta === 'number' && profile.lastDelta !== 0 && (
-            <span className={`coach-elo-delta ${profile.lastDelta > 0 ? 'up' : 'down'}`}>
-              {profile.lastDelta > 0 ? '+' : ''}
-              {profile.lastDelta}
-            </span>
-          )}
-        </div>
-        <div className="coach-elo-block secondary">
-          <span className="coach-elo-label">Opponent</span>
-          <span className="coach-elo-value">{engineElo}</span>
-        </div>
-        <div className="coach-record">
-          {profile.wins}W · {profile.draws}D · {profile.losses}L
-        </div>
-      </div>
-
       <div className="coach-body">
         <CoachAvatar mood={mood} theme={theme} />
         <div className="coach-speech">
@@ -116,35 +153,77 @@ function CoachPanel({
         </div>
       </div>
 
-      <div className="coach-move-list" ref={listRef} aria-label="Move history">
-        {rows.length === 0 ? (
-          <p className="coach-move-empty">No moves yet</p>
-        ) : (
-          <ol className="coach-move-rows">
-            {rows.map((row) => (
-              <li key={row.n} className="coach-move-row">
-                <span className="coach-move-num">{row.n}.</span>
-                <MoveCell move={row.white} />
-                <MoveCell move={row.black} />
-              </li>
-            ))}
-          </ol>
-        )}
+      <div className="coach-move-list coach-move-list--compact" aria-label="Move history">
+        <button
+          type="button"
+          className="coach-hist-btn"
+          aria-label="Older moves"
+          disabled={!canOlder}
+          onClick={() => setHistoryEnd(Math.max(HISTORY_WINDOW, end - HISTORY_WINDOW))}
+        >
+          ‹
+        </button>
+        <div className="coach-move-window">
+          <MoveRows rows={visible} />
+        </div>
+        <button
+          type="button"
+          className="coach-hist-btn"
+          aria-label="Newer moves"
+          disabled={!canNewer}
+          onClick={() => {
+            const next = end + HISTORY_WINDOW;
+            setHistoryEnd(next >= rows.length ? null : next);
+          }}
+        >
+          ›
+        </button>
       </div>
 
-      <div className="coach-actions">
-        <button type="button" className="coach-btn" onClick={onHint} disabled={busy || gameOver}>
-          Hint
-        </button>
-        <button type="button" className="coach-btn" onClick={onUndo} disabled={busy || !canUndo}>
-          Undo
-        </button>
-        <button type="button" className="coach-btn" onClick={onResign} disabled={busy || gameOver}>
-          Resign
-        </button>
-        <button type="button" className="coach-btn primary" onClick={onNewGame} disabled={busy}>
-          New game
-        </button>
+      <div
+        className="coach-move-list coach-move-list--full"
+        aria-label="Move history"
+        ref={listRef}
+      >
+        <MoveRows rows={rows} />
+      </div>
+
+      <div className="coach-footer">
+        <div className="coach-record" title="Wins · Draws · Losses">
+          <span>{profile.wins}W</span>
+          <span>{profile.draws}D</span>
+          <span>{profile.losses}L</span>
+        </div>
+        <div className="coach-actions">
+          <ActionButton
+            className="coach-btn"
+            onClick={onHint}
+            disabled={busy || gameOver}
+            icon={faLightbulb}
+            label="Hint"
+          />
+          <ActionButton
+            className="coach-btn"
+            onClick={onUndo}
+            disabled={busy || !canUndo}
+            icon={faRotateLeft}
+            label="Undo"
+          />
+          <ActionButton
+            className="coach-btn"
+            onClick={onResign}
+            disabled={busy || gameOver}
+            icon={faFlag}
+            label="Resign"
+          />
+          <ActionButton
+            className="coach-btn primary"
+            onClick={onNewGame}
+            disabled={busy}
+            icon={faPlus}
+            label="New"
+          />
+        </div>
       </div>
     </div>
   );

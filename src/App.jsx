@@ -342,14 +342,34 @@ function App() {
   };
 
   return (
-    <div>
+    <div className="app-shell">
       <header>
-        <h1>
-          <FontAwesomeIcon icon={faChess} size="lg" style={{ marginRight: '14px' }} />
-          chess coach
+        <h1 className="header-brand" title="Chess coach">
+          <FontAwesomeIcon icon={faChess} />
+          <span className="header-brand-text">chess coach</span>
         </h1>
-        <div className="header-elo" title="Your stored Elo">
-          Elo {profile.elo}
+        <div className="header-elo" title={coachMode ? 'Your Elo | Opponent Elo' : 'Your Elo'}>
+          <span className="header-elo-you">
+            <span className="header-elo-label">Elo</span>
+            {profile.elo}
+            {typeof profile.lastDelta === 'number' && profile.lastDelta !== 0 && (
+              <span className={`header-elo-delta ${profile.lastDelta > 0 ? 'up' : 'down'}`}>
+                {profile.lastDelta > 0 ? '+' : ''}
+                {profile.lastDelta}
+              </span>
+            )}
+          </span>
+          {coachMode && (
+            <>
+              <span className="header-elo-pipe" aria-hidden="true">
+                |
+              </span>
+              <span className="header-elo-opp">
+                <span className="header-elo-label">Opp</span>
+                {engineElo}
+              </span>
+            </>
+          )}
         </div>
         <div className="config-button" onClick={() => setShowConfig((open) => !open)}>
           <FontAwesomeIcon icon={faGear} />
@@ -375,7 +395,6 @@ function App() {
           {coachMode && (
             <CoachPanel
               profile={profile}
-              engineElo={engineElo}
               verdict={verdict}
               coachMessage={coachMessage}
               status={status}
