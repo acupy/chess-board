@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSquare } from '@fortawesome/free-solid-svg-icons';
 import Piece from './Piece';
@@ -19,6 +19,7 @@ import {
   serializeFEN,
   tryMove,
 } from './chess';
+import { fenPieceCount, vibrateForMove, vibrateMove, vibrateSelect } from './haptics';
 
 const getFieldColour = (rankIndex, columnIndex) => {
   if (rankIndex % 2 === 0) {
@@ -52,10 +53,24 @@ function Board({
   const rulesOn = coachMode || chessRulesEnforced;
   const [game, setGame] = useState(() => parseFEN(position));
   const [selected, setSelected] = useState([-1, -1]);
+  const skipExternalHapticRef = useRef(false);
+  const prevPositionRef = useRef(position);
 
   useEffect(() => {
+    const prev = prevPositionRef.current;
     setGame(parseFEN(position));
     setSelected([-1, -1]);
+
+    if (skipExternalHapticRef.current) {
+      skipExternalHapticRef.current = false;
+    } else if (prev && prev !== position) {
+      const before = fenPieceCount(prev);
+      const after = fenPieceCount(position);
+      if (after < before) vibrateForMove(true);
+      else if (after === before && after > 0) vibrateMove();
+    }
+
+    prevPositionRef.current = position;
   }, [position]);
 
   const allowedFieldsForSelected = useMemo(() => {
@@ -65,7 +80,9 @@ function Board({
     return getLegalMoveMatrix(game, selected);
   }, [game, selected]);
 
-  const commitGame = (next, moveMeta = null) => {
+  const commitGame = (next, moveMeta = null, { isCapture = false } = {}) => {
+    vibrateForMove(isCapture);
+    skipExternalHapticRef.current = true;
     setGame(next);
     setSelected([-1, -1]);
     const fen = serializeFEN(next);
@@ -100,12 +117,16 @@ function Board({
     const next = tryMove(game, from, to, rulesOn);
     if (!next) return;
 
+    const isCapture = rulesOn
+      ? allowedFieldsForSelected[rankIdx][columnIdx] === FIELD_AVAILABILITY.HIT
+      : game.board[to[0]][to[1]] !== EMPTY;
+
     const promo =
       game.board[from[0]][from[1]]?.toUpperCase() === 'P' && (to[0] === 0 || to[0] === 7)
         ? 'q'
         : null;
     const uci = coordsToUci(from, to, promo);
-    commitGame(next, { from, to, uci });
+    commitGame(next, { from, to, uci }, { isCapture });
   };
 
   const selectPiece = (rankIdx, columnIdx) => {
@@ -120,15 +141,17 @@ function Board({
       return;
     }
 
-    setSelected((current) =>
-      current[0] === rankIdx && current[1] === columnIdx ? [-1, -1] : [rankIdx, columnIdx]
-    );
+    setSelected((current) => {
+      const deselecting = current[0] === rankIdx && current[1] === columnIdx;
+      if (!deselecting) vibrateSelect();
+      return deselecting ? [-1, -1] : [rankIdx, columnIdx];
+    });
   };
 
   const onRemoveSelectedPiece = (event) => {
     if (coachMode || rulesOn || event.key !== 'Backspace') return;
     if (selected[0] === -1 || selected[1] === -1) return;
-    commitGame(clearSquare(game, selected));
+    commitGame(clearSquare(game, selected), null, { isCapture: true });
   };
 
   const whiteToMove = isWhiteToMove(game);
