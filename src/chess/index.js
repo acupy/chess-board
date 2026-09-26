@@ -27,6 +27,7 @@ export {
   coordsToUci,
   describeUciMove,
   explainMoveIdea,
+  inspectUciMove,
   pickLegalEngineMove,
   hasLegalMoves,
   GAME_RESULT,

@@ -3,12 +3,16 @@
  * Uses the lite single-threaded WASM build from /stockfish/.
  */
 
+import { parseFEN } from '../chess';
+import { pickHumanMove } from './humanPlay';
+import { strengthOptionsForElo } from './strength';
+
 const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js';
 
-const MIN_UCI_ELO = 1320;
-const MAX_UCI_ELO = 3190;
 const DEFAULT_MOVETIME_MS = 500;
 const ANALYZE_MOVETIME_MS = 400;
+
+export { strengthOptionsForElo } from './strength';
 
 let worker = null;
 let ready = false;
@@ -67,33 +71,20 @@ const ensureReady = async () => {
   if (!ready) await initEngine();
 };
 
-/**
- * Map target Elo to Stockfish strength options.
- * UCI_Elo is only valid roughly 1320–3190; below that use Skill Level.
- */
-export const strengthOptionsForElo = (elo) => {
-  const clamped = Math.max(100, Math.min(MAX_UCI_ELO, Math.round(elo)));
-  if (clamped >= MIN_UCI_ELO) {
-    return {
-      limitStrength: true,
-      uciElo: Math.min(MAX_UCI_ELO, clamped),
-      skillLevel: null,
-    };
-  }
-  // Map 100–1319 → Skill Level 0–10
-  const skill = Math.max(0, Math.min(10, Math.round(((clamped - 100) / (MIN_UCI_ELO - 100)) * 10)));
-  return { limitStrength: false, uciElo: null, skillLevel: skill };
-};
-
-const applyStrength = (elo) => {
-  const opts = strengthOptionsForElo(elo);
+const applyStrength = async (opts) => {
   if (opts.limitStrength) {
     send('setoption name UCI_LimitStrength value true');
     send(`setoption name UCI_Elo value ${opts.uciElo}`);
+    send('setoption name Skill Level value 20');
+    send('setoption name MultiPV value 1');
   } else {
+    // Full-strength MultiPV so eval losses are real; the human model picks among them.
     send('setoption name UCI_LimitStrength value false');
-    send(`setoption name Skill Level value ${opts.skillLevel}`);
+    send('setoption name Skill Level value 20');
+    send(`setoption name MultiPV value ${opts.multiPv || 1}`);
   }
+  send('isready');
+  await waitFor((line) => line === 'readyok');
 };
 
 const parseScore = (infoLine) => {
@@ -124,6 +115,9 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
     // Full strength for analysis
     send('setoption name UCI_LimitStrength value false');
     send('setoption name Skill Level value 20');
+    send('setoption name MultiPV value 1');
+    send('isready');
+    await waitFor((line) => line === 'readyok');
     send('ucinewgame');
     send(`position fen ${fen}`);
 
@@ -161,16 +155,35 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
     return resultPromise;
   });
 
+const parseMultiPv = (line) => {
+  if (!line.startsWith('info ') || !line.includes(' score ') || !line.includes(' pv ')) return null;
+  const rankMatch = line.match(/\bmultipv (\d+)/);
+  const pvMatch = line.match(/\bpv (\S+)/);
+  const score = parseScore(line);
+  if (!pvMatch || !score) return null;
+  return {
+    rank: rankMatch ? Number(rankMatch[1]) : 1,
+    uci: pvMatch[1],
+    cp: score.cp,
+  };
+};
+
 /**
  * Pick a move at approximately the given Elo strength.
+ * @param {string} fen
+ * @param {number} elo
+ * @param {number} [movetimeMs]
+ * @param {{ lastOpponentUci?: string | null, lastOwnUci?: string | null }} [context]
  */
-export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
+export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS, context = {}) =>
   runExclusive(async () => {
     await ensureReady();
-    applyStrength(elo);
+    const opts = strengthOptionsForElo(elo);
+    await applyStrength(opts);
     send('ucinewgame');
     send(`position fen ${fen}`);
 
+    const linesByRank = new Map();
     const resultPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         worker.removeEventListener('message', onMessage);
@@ -179,6 +192,8 @@ export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
 
       const onMessage = (event) => {
         const line = typeof event.data === 'string' ? event.data : '';
+        const parsed = parseMultiPv(line);
+        if (parsed) linesByRank.set(parsed.rank, parsed);
         if (line.startsWith('bestmove ')) {
           clearTimeout(timeout);
           worker.removeEventListener('message', onMessage);
@@ -189,7 +204,28 @@ export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
     });
 
     send(`go movetime ${movetimeMs}`);
-    return resultPromise;
+    const engineMove = await resultPromise;
+
+    if (opts.mode !== 'human') return engineMove;
+
+    try {
+      const game = parseFEN(fen);
+      const engineLines = [...linesByRank.values()].sort((a, b) => a.rank - b.rank);
+      if (engineMove && !engineLines.some((line) => line.uci === engineMove)) {
+        engineLines.unshift({ rank: 0, uci: engineMove, cp: engineLines[0]?.cp ?? 0 });
+      }
+      return (
+        pickHumanMove({
+          game,
+          engineLines,
+          elo,
+          lastOpponentUci: context.lastOpponentUci,
+          lastOwnUci: context.lastOwnUci,
+        }) || engineMove
+      );
+    } catch {
+      return engineMove;
+    }
   });
 
 /**

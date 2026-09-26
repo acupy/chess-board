@@ -25,6 +25,10 @@ export const ENGINE_OFFSET = 80;
 export const MIN_ENGINE_ELO = 400;
 export const MAX_ENGINE_ELO = 2200;
 
-/** Opponent target slightly above the player. */
+/**
+ * Opponent target slightly above the player.
+ * Below Stockfish's ~1320 floor, `pickHumanMove` selects among MultiPV
+ * candidates by eval loss and what a player of that rating would notice.
+ */
 export const engineEloForPlayer = (playerElo) =>
   Math.max(MIN_ENGINE_ELO, Math.min(MAX_ENGINE_ELO, Math.round(playerElo + ENGINE_OFFSET)));
