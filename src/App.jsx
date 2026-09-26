@@ -634,6 +634,16 @@ function App() {
                   Light uniforms against dark. A capture plays out as a short strike.
                 </span>
               )}
+              {pieceStyle === 'abstract' && (
+                <span className="elo-setting-hint">
+                  Flat insignia, light against dark.
+                </span>
+              )}
+              {pieceStyle === 'symbols' && (
+                <span className="elo-setting-hint">
+                  Cartoon helmet, grenade, missile, crown, fort, and star.
+                </span>
+              )}
               {pieceStyle === 'fantasy' && (
                 <span className="elo-setting-hint">
                   Haven against Inferno. A capture plays out as a short fight. Select a piece to see who it is.

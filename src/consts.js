@@ -50,6 +50,8 @@ export const LICHESS_PIECES = {
 
 export const PIECE_STYLES = [
   { id: 'military', label: 'Military — Light vs Dark', kind: 'military' },
+  { id: 'abstract', label: 'Military — Abstract', kind: 'abstract' },
+  { id: 'symbols', label: 'Military — Gear', kind: 'symbols' },
   { id: 'fantasy', label: 'Fantasy — Haven vs Inferno', kind: 'fantasy' },
   { id: 'fontAwesome', label: 'Font Awesome', kind: 'fontawesome' },
   { id: 'unicode', label: 'Unicode', kind: 'unicode' },

@@ -36,6 +36,15 @@ function Piece({
   let content = null;
   if (meta.kind === 'fantasy') {
     content = <FantasyPiece piece={piece} />;
+  } else if (meta.kind === 'abstract' || meta.kind === 'symbols') {
+    content = (
+      <img
+        className="piece"
+        src={`img/pieceStyles/${pieceStyle}/${PIECES[piece]}`}
+        alt={ALT_PIECES[piece]}
+        draggable={false}
+      />
+    );
   } else if (meta.kind === 'military') {
     const file = `${isWhite ? 'w' : 'b'}${piece.toUpperCase()}.png`;
     content = (

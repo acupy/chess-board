@@ -15,7 +15,7 @@ export const GAME_THEMES = [
     chrome: 'gray',
     coach: 'classic',
     defaultPiece: 'cburnett',
-    hiddenPieces: ['fantasy', 'military'],
+    hiddenPieces: ['fantasy', 'military', 'abstract', 'symbols'],
   },
   {
     id: 'military',
@@ -31,7 +31,7 @@ export const GAME_THEMES = [
     chrome: 'fantasy',
     coach: 'fantasy',
     defaultPiece: 'fantasy',
-    hiddenPieces: ['military'],
+    hiddenPieces: ['military', 'abstract', 'symbols'],
   },
 ];
 

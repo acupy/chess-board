@@ -629,7 +629,9 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
   }
 }
 
-.board-theme-cheq {
+.board-theme-cheq,
+.board-theme-abstract,
+.board-theme-symbols {
   .board {
     border-radius: 0;
     box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45);
@@ -760,6 +762,17 @@ $BIG_BOARD_FONT_SIZE: 1.7rem;
     drop-shadow(0 0 1px #14110c)
     drop-shadow(0 0 1px rgba(255, 246, 228, 0.72))
     drop-shadow(0 2px 3px rgba(0, 0, 0, 0.75));
+}
+
+.board-theme-symbols .piece {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  object-position: center center;
+  filter:
+    drop-shadow(0 0 1px #14110c)
+    drop-shadow(0 0 1px rgba(255, 246, 228, 0.55))
+    drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
 }
 
 .board-theme-leipzig {
