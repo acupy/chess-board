@@ -12,6 +12,19 @@ const MILITARY_MOOD_IMAGES = {
   shocked: 'img/coach/coach-mil-shocked.png',
 };
 
+const FANTASY_MOOD_IMAGES = {
+  proud: 'img/coach/coach-fantasy-proud.png',
+  neutral: 'img/coach/coach-fantasy-neutral.png',
+  concerned: 'img/coach/coach-fantasy-concerned.png',
+  shocked: 'img/coach/coach-fantasy-shocked.png',
+};
+
+const COACH_IMAGES = {
+  classic: DEFAULT_MOOD_IMAGES,
+  military: MILITARY_MOOD_IMAGES,
+  fantasy: FANTASY_MOOD_IMAGES,
+};
+
 const MOOD_LABELS = {
   proud: 'Coach is impressed',
   neutral: 'Coach is listening',
@@ -44,8 +57,8 @@ export const moodFromVerdict = (verdict, { busy = false, gameOver = false, statu
   }
 };
 
-function CoachAvatar({ mood = 'neutral', theme = 'gray' }) {
-  const set = theme === 'green' ? MILITARY_MOOD_IMAGES : DEFAULT_MOOD_IMAGES;
+function CoachAvatar({ mood = 'neutral', theme = 'classic' }) {
+  const set = COACH_IMAGES[theme] || DEFAULT_MOOD_IMAGES;
   const src = set[mood] || set.neutral;
   const label = MOOD_LABELS[mood] || MOOD_LABELS.neutral;
 

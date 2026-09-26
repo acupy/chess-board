@@ -4,6 +4,14 @@ import { faSquare } from '@fortawesome/free-solid-svg-icons';
 import Piece from './Piece';
 import { COLUMNS, EMPTY, FIELD_AVAILABILITY, RANKS } from './consts';
 import {
+  battleMotion,
+  diffCapture,
+  FANTASY_ROSTER,
+  FANTASY_STRIKE_MS,
+  fantasyLabel,
+  fantasyMotionEnabled,
+} from './fantasy/roster';
+import {
   canSelectPiece,
   clearSquare,
   coordsToUci,
@@ -55,25 +63,56 @@ function Board({
   const rulesOn = coachMode || chessRulesEnforced;
   const [game, setGame] = useState(() => parseFEN(position));
   const [selected, setSelected] = useState([-1, -1]);
+  const [battle, setBattle] = useState(null);
   const skipExternalHapticRef = useRef(false);
   const prevPositionRef = useRef(position);
+  const strikeTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(strikeTimerRef.current), []);
 
   useEffect(() => {
     const prev = prevPositionRef.current;
-    setGame(parseFEN(position));
-    setSelected([-1, -1]);
 
     if (skipExternalHapticRef.current) {
       skipExternalHapticRef.current = false;
-    } else if (prev && prev !== position) {
-      const before = fenPieceCount(prev);
-      const after = fenPieceCount(position);
-      if (after < before) vibrateForMove(true);
-      else if (after === before && after > 0) vibrateMove();
+      prevPositionRef.current = position;
+      return undefined;
+    }
+
+    if (!prev || prev === position) {
+      prevPositionRef.current = position;
+      return undefined;
+    }
+
+    const before = fenPieceCount(prev);
+    const after = fenPieceCount(position);
+    if (after < before) vibrateForMove(true);
+    else if (after === before && after > 0) vibrateMove();
+
+    const capture =
+      (pieceStyle === 'fantasy' || pieceStyle === 'military') &&
+      after < before &&
+      fantasyMotionEnabled()
+        ? diffCapture(parseFEN(prev).board, parseFEN(position).board)
+        : null;
+
+    if (capture) {
+      setSelected([-1, -1]);
+      setBattle(capture);
+      const timer = setTimeout(() => {
+        prevPositionRef.current = position;
+        setGame(parseFEN(position));
+        setBattle(null);
+      }, FANTASY_STRIKE_MS);
+      return () => clearTimeout(timer);
     }
 
     prevPositionRef.current = position;
-  }, [position]);
+    setGame(parseFEN(position));
+    setSelected([-1, -1]);
+    setBattle(null);
+    return undefined;
+  }, [position, pieceStyle]);
 
   const allowedFieldsForSelected = useMemo(() => {
     if (selected[0] === -1 || selected[1] === -1) {
@@ -82,8 +121,8 @@ function Board({
     return getLegalMoveMatrix(game, selected);
   }, [game, selected]);
 
-  const commitGame = (next, moveMeta = null, { isCapture = false } = {}) => {
-    vibrateForMove(isCapture);
+  const commitGame = (next, moveMeta = null, { isCapture = false, skipHaptic = false } = {}) => {
+    if (!skipHaptic) vibrateForMove(isCapture);
     skipExternalHapticRef.current = true;
     setGame(next);
     setSelected([-1, -1]);
@@ -104,7 +143,7 @@ function Board({
   };
 
   const moveSelectedTo = (rankIdx, columnIdx) => {
-    if (interactionDisabled) return;
+    if (interactionDisabled || battle) return;
     if (selected[0] === -1 || selected[1] === -1) return;
 
     if (
@@ -123,16 +162,47 @@ function Board({
       ? allowedFieldsForSelected[rankIdx][columnIdx] === FIELD_AVAILABILITY.HIT
       : game.board[to[0]][to[1]] !== EMPTY;
 
-    const promo =
-      game.board[from[0]][from[1]]?.toUpperCase() === 'P' && (to[0] === 0 || to[0] === 7)
-        ? 'q'
-        : null;
+    const mover = game.board[from[0]][from[1]];
+    const promotes = mover?.toUpperCase() === 'P' && (to[0] === 0 || to[0] === 7);
+    const promo = promotes ? 'q' : null;
     const uci = coordsToUci(from, to, promo);
+
+    let defender = game.board[to[0]][to[1]];
+    let victimAt = to;
+    if ((defender === EMPTY || !defender) && mover?.toUpperCase() === 'P' && from[1] !== to[1]) {
+      defender = game.board[from[0]][to[1]];
+      victimAt = [from[0], to[1]];
+    }
+
+    if (
+      (pieceStyle === 'fantasy' || pieceStyle === 'military') &&
+      isCapture &&
+      defender &&
+      defender !== EMPTY &&
+      fantasyMotionEnabled()
+    ) {
+      vibrateForMove(true);
+      setBattle({
+        attacker: promotes ? (mover === 'P' ? 'Q' : 'q') : mover,
+        defender,
+        from,
+        to,
+        victimAt,
+      });
+      setSelected([-1, -1]);
+      clearTimeout(strikeTimerRef.current);
+      strikeTimerRef.current = setTimeout(() => {
+        setBattle(null);
+        commitGame(next, { from, to, uci }, { isCapture: true, skipHaptic: true });
+      }, FANTASY_STRIKE_MS);
+      return;
+    }
+
     commitGame(next, { from, to, uci }, { isCapture });
   };
 
   const selectPiece = (rankIdx, columnIdx) => {
-    if (interactionDisabled) return;
+    if (interactionDisabled || battle) return;
 
     if (rulesOn && allowedFieldsForSelected[rankIdx][columnIdx] === FIELD_AVAILABILITY.HIT) {
       moveSelectedTo(rankIdx, columnIdx);
@@ -181,6 +251,20 @@ function Board({
     return map;
   }, [dangerMarks]);
 
+  const motion = battle ? battleMotion(battle) : null;
+  const fightingPiece = battle ? game.board[battle.from[0]]?.[battle.from[1]] : null;
+  const fightLine =
+    battle && pieceStyle === 'military'
+      ? 'Contact'
+      : battle && FANTASY_ROSTER[fightingPiece] && FANTASY_ROSTER[battle.defender]
+        ? `${FANTASY_ROSTER[fightingPiece].plate} strikes ${FANTASY_ROSTER[battle.defender].plate}`
+        : null;
+  const selectedPiece = selected[0] !== -1 ? game.board[selected[0]][selected[1]] : null;
+  const selectedLine =
+    pieceStyle === 'fantasy' && selectedPiece && selectedPiece !== EMPTY
+      ? fantasyLabel(selectedPiece)
+      : null;
+
   const mateAlert =
     isCheckmate && winner === 'white'
       ? 'Checkmate — White wins'
@@ -192,7 +276,7 @@ function Board({
 
   return (
     <div
-      className={`board-wrapper board-theme-${pieceStyle || 'cburnett'}${interactionDisabled ? ' board-disabled' : ''}${inCheck && !isCheckmate ? ' in-check' : ''}${isCheckmate ? ' in-checkmate' : ''}`}
+      className={`board-wrapper board-theme-${pieceStyle || 'cburnett'}${interactionDisabled ? ' board-disabled' : ''}${battle ? ' board-battling' : ''}${inCheck && !isCheckmate ? ' in-check' : ''}${isCheckmate ? ' in-checkmate' : ''}`}
       onKeyDown={onRemoveSelectedPiece}
       onBlur={() => setSelected([-1, -1])}
       tabIndex="0"
@@ -223,7 +307,7 @@ function Board({
         </div>
         <div className="board">
           {game.board.map((rank, ridx) => (
-            <div className="rank" key={`rank-${ridx}`}>
+            <div className="rank" key={`rank-${ridx}`} style={{ '--rank': ridx }}>
               {rank.map((cell, cidx) => {
                 const isKingChecked =
                   checkedKing && checkedKing[0] === ridx && checkedKing[1] === cidx;
@@ -263,6 +347,20 @@ function Board({
                         isSelected={ridx === selected[0] && cidx === selected[1]}
                         inCheck={Boolean(isKingChecked) && !isCheckmate}
                         isCheckmated={Boolean(isKingChecked) && isCheckmate}
+                        battleRole={
+                          battle && battle.from[0] === ridx && battle.from[1] === cidx
+                            ? 'lunge'
+                            : battle && battle.victimAt[0] === ridx && battle.victimAt[1] === cidx
+                              ? 'struck'
+                              : null
+                        }
+                        battleStyle={
+                          motion && battle?.from[0] === ridx && battle?.from[1] === cidx
+                            ? motion.lunge
+                            : motion && battle?.victimAt[0] === ridx && battle?.victimAt[1] === cidx
+                              ? motion.struck
+                              : null
+                        }
                         selectPiece={() => selectPiece(ridx, cidx)}
                       />
                     )}
@@ -276,7 +374,16 @@ function Board({
       </div>
       {rulesOn && (
         <div className="board-bottom-status">
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="board-status-line" style={{ marginLeft: 'auto' }}>
+            {fightLine ? (
+              <span className={pieceStyle === 'military' ? 'military-contact' : 'fantasy-clash'}>
+                {fightLine} ·{' '}
+              </span>
+            ) : selectedLine ? (
+              <span className="fantasy-selected">{selectedLine} · </span>
+            ) : pieceStyle === 'fantasy' ? (
+              <span className="fantasy-side">{whiteToMove ? 'Haven' : 'Inferno'} · </span>
+            ) : null}
             {busy ? 'thinking · ' : ''}
             {isCheckmate ? (
               <span className="status-checkmate">

@@ -8,6 +8,7 @@ import {
   faChessRook,
 } from '@fortawesome/free-solid-svg-icons';
 import { ALT_PIECES, getPieceStyleMeta, LICHESS_PIECES, PIECES } from './consts';
+import FantasyPiece from './fantasy/FantasyPiece';
 
 const FONT_AWESOME_PIECES = {
   P: faChessPawn,
@@ -18,13 +19,34 @@ const FONT_AWESOME_PIECES = {
   K: faChessKing,
 };
 
-function Piece({ piece, pieceStyle, isSelected, inCheck = false, isCheckmated = false, selectPiece }) {
+function Piece({
+  piece,
+  pieceStyle,
+  isSelected,
+  inCheck = false,
+  isCheckmated = false,
+  selectPiece,
+  battleRole = null,
+  battleStyle = null,
+}) {
   const meta = getPieceStyleMeta(pieceStyle);
   const pieceIcon = FONT_AWESOME_PIECES[piece.toUpperCase()];
   const isWhite = piece === piece.toUpperCase();
 
   let content = null;
-  if (meta.kind === 'fontawesome') {
+  if (meta.kind === 'fantasy') {
+    content = <FantasyPiece piece={piece} />;
+  } else if (meta.kind === 'military') {
+    const file = `${isWhite ? 'w' : 'b'}${piece.toUpperCase()}.png`;
+    content = (
+      <img
+        className="piece military-piece"
+        src={`img/pieceStyles/military/${file}`}
+        alt={ALT_PIECES[piece]}
+        draggable={false}
+      />
+    );
+  } else if (meta.kind === 'fontawesome') {
     content = (
       <FontAwesomeIcon
         icon={pieceIcon}
@@ -63,15 +85,33 @@ function Piece({ piece, pieceStyle, isSelected, inCheck = false, isCheckmated = 
 
   const baseClass = isSelected ? 'selected-piece-wrapper' : 'piece-wrapper';
   const stateClass = isCheckmated ? ' king-checkmated' : inCheck ? ' king-in-check' : '';
+  const militaryBattle = meta.kind === 'military';
+  const battleClass =
+    battleRole === 'lunge'
+      ? militaryBattle
+        ? ' military-advance'
+        : ' fantasy-lunge'
+      : battleRole === 'struck'
+        ? militaryBattle
+          ? ' military-hit'
+          : ' fantasy-struck'
+        : '';
   return (
     <div
-      className={`${baseClass}${stateClass}`}
+      className={`${baseClass}${stateClass}${battleClass}`}
+      style={battleStyle || undefined}
       onMouseUp={(event) => {
         event.stopPropagation();
         selectPiece();
       }}
     >
       {content}
+      {battleRole === 'struck' && (
+        <span
+          className={militaryBattle ? 'military-burst' : 'fantasy-spark'}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 }

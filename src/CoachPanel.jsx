@@ -107,7 +107,7 @@ function CoachPanel({
   canUndo = false,
   onNewGame,
   onResign,
-  theme = 'gray',
+  theme = 'classic',
   moves = [],
 }) {
   const mood = moodFromVerdict(verdict, { busy, gameOver, status });

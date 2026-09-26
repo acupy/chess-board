@@ -34,10 +34,16 @@ import {
   coachWelcome,
 } from './coach/voice';
 import { loadProfile, recordGameResult, setPlayerElo, loadSession, saveSession, clearSession } from './coach/storage';
-import { loadPreferences, updatePreferences, THEME_OPTIONS } from './coach/preferences';
+import {
+  getGameTheme,
+  loadPreferences,
+  pieceStylesForTheme,
+  resolvePieceStyle,
+  THEME_OPTIONS,
+  updatePreferences,
+} from './coach/preferences';
 import { MIN_UCI_ELO } from './engine/strength';
 import { analyze, classifyMove, initEngine, pickMove } from './engine/stockfish';
-import { PIECE_STYLES } from './consts';
 
 const START_POSITION = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -146,7 +152,7 @@ function App() {
   }, [profile.elo]);
 
   useEffect(() => {
-    document.documentElement.className = theme;
+    document.documentElement.className = getGameTheme(theme).chrome;
   }, [theme]);
 
   // Persist coach game so refresh / reopen can continue
@@ -593,8 +599,10 @@ function App() {
                   value={theme}
                   onChange={(event) => {
                     const nextTheme = event.target.value;
+                    const nextPiece = resolvePieceStyle(nextTheme, pieceStyle);
                     setTheme(nextTheme);
-                    updatePreferences({ theme: nextTheme });
+                    setPieceStyle(nextPiece);
+                    updatePreferences({ theme: nextTheme, pieceStyle: nextPiece });
                   }}
                 >
                   {THEME_OPTIONS.map((option) => (
@@ -614,13 +622,23 @@ function App() {
                   }}
                   value={pieceStyle}
                 >
-                  {PIECE_STYLES.map((style) => (
+                  {pieceStylesForTheme(theme).map((style) => (
                     <option key={style.id} value={style.id}>
                       {style.label}
                     </option>
                   ))}
                 </select>
               </label>
+              {pieceStyle === 'military' && (
+                <span className="elo-setting-hint">
+                  Light uniforms against dark. A capture plays out as a short strike.
+                </span>
+              )}
+              {pieceStyle === 'fantasy' && (
+                <span className="elo-setting-hint">
+                  Haven against Inferno. A capture plays out as a short fight. Select a piece to see who it is.
+                </span>
+              )}
               {coachMode && (
                 <label style={{ flexFlow: 'row' }}>
                   Point out dangers:
