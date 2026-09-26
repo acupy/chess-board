@@ -3,8 +3,9 @@
  * Uses the lite single-threaded WASM build from /stockfish/.
  */
 
-import { listLegalUciMoves, parseFEN } from '../chess';
-import { chooseLimitedMove, strengthOptionsForElo } from './strength';
+import { parseFEN } from '../chess';
+import { pickHumanMove } from './humanPlay';
+import { strengthOptionsForElo } from './strength';
 
 const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js';
 
@@ -70,20 +71,20 @@ const ensureReady = async () => {
   if (!ready) await initEngine();
 };
 
-const applyStrength = async (elo) => {
-  const opts = strengthOptionsForElo(elo);
+const applyStrength = async (opts) => {
   if (opts.limitStrength) {
     send('setoption name UCI_LimitStrength value true');
     send(`setoption name UCI_Elo value ${opts.uciElo}`);
     send('setoption name Skill Level value 20');
+    send('setoption name MultiPV value 1');
   } else {
-    // Skill 0 ≈ 1320 Elo — the weakest native setting. Higher skill is stronger.
+    // Full-strength MultiPV so eval losses are real; the human model picks among them.
     send('setoption name UCI_LimitStrength value false');
-    send(`setoption name Skill Level value ${opts.skillLevel}`);
+    send('setoption name Skill Level value 20');
+    send(`setoption name MultiPV value ${opts.multiPv || 1}`);
   }
   send('isready');
   await waitFor((line) => line === 'readyok');
-  return opts;
 };
 
 const parseScore = (infoLine) => {
@@ -114,6 +115,7 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
     // Full strength for analysis
     send('setoption name UCI_LimitStrength value false');
     send('setoption name Skill Level value 20');
+    send('setoption name MultiPV value 1');
     send('isready');
     await waitFor((line) => line === 'readyok');
     send('ucinewgame');
@@ -153,16 +155,35 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
     return resultPromise;
   });
 
+const parseMultiPv = (line) => {
+  if (!line.startsWith('info ') || !line.includes(' score ') || !line.includes(' pv ')) return null;
+  const rankMatch = line.match(/\bmultipv (\d+)/);
+  const pvMatch = line.match(/\bpv (\S+)/);
+  const score = parseScore(line);
+  if (!pvMatch || !score) return null;
+  return {
+    rank: rankMatch ? Number(rankMatch[1]) : 1,
+    uci: pvMatch[1],
+    cp: score.cp,
+  };
+};
+
 /**
  * Pick a move at approximately the given Elo strength.
+ * @param {string} fen
+ * @param {number} elo
+ * @param {number} [movetimeMs]
+ * @param {{ lastOpponentUci?: string | null, lastOwnUci?: string | null }} [context]
  */
-export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
+export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS, context = {}) =>
   runExclusive(async () => {
     await ensureReady();
-    const opts = await applyStrength(elo);
+    const opts = strengthOptionsForElo(elo);
+    await applyStrength(opts);
     send('ucinewgame');
     send(`position fen ${fen}`);
 
+    const linesByRank = new Map();
     const resultPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         worker.removeEventListener('message', onMessage);
@@ -171,6 +192,8 @@ export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
 
       const onMessage = (event) => {
         const line = typeof event.data === 'string' ? event.data : '';
+        const parsed = parseMultiPv(line);
+        if (parsed) linesByRank.set(parsed.rank, parsed);
         if (line.startsWith('bestmove ')) {
           clearTimeout(timeout);
           worker.removeEventListener('message', onMessage);
@@ -182,11 +205,24 @@ export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
 
     send(`go movetime ${movetimeMs}`);
     const engineMove = await resultPromise;
-    if (!(opts.mistakeRate > 0)) return engineMove;
+
+    if (opts.mode !== 'human') return engineMove;
 
     try {
-      const legal = listLegalUciMoves(parseFEN(fen));
-      return chooseLimitedMove(legal, engineMove, opts.mistakeRate);
+      const game = parseFEN(fen);
+      const engineLines = [...linesByRank.values()].sort((a, b) => a.rank - b.rank);
+      if (engineMove && !engineLines.some((line) => line.uci === engineMove)) {
+        engineLines.unshift({ rank: 0, uci: engineMove, cp: engineLines[0]?.cp ?? 0 });
+      }
+      return (
+        pickHumanMove({
+          game,
+          engineLines,
+          elo,
+          lastOpponentUci: context.lastOpponentUci,
+          lastOwnUci: context.lastOwnUci,
+        }) || engineMove
+      );
     } catch {
       return engineMove;
     }

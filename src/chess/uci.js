@@ -35,7 +35,7 @@ const PIECE_NAMES = {
   k: 'king',
 };
 
-const moveFacts = (game, uci) => {
+export const inspectUciMove = (game, uci) => {
   const parsed = parseUciMove(uci);
   if (!parsed || !game) return null;
 
@@ -82,7 +82,7 @@ const moveFacts = (game, uci) => {
  * e.g. "knight g1 to f3", "pawn e4 takes pawn on d5", "castle kingside"
  */
 export const describeUciMove = (game, uci) => {
-  const facts = moveFacts(game, uci);
+  const facts = inspectUciMove(game, uci);
   if (!facts) {
     if (!uci || uci.length < 4) return uci || '';
     const promo = uci.length >= 5 ? `, promote to ${PIECE_NAMES[uci[4].toLowerCase()] || uci[4]}` : '';
@@ -107,7 +107,7 @@ export const describeUciMove = (game, uci) => {
  * Factual one-line reason for a hint. Derived from the board, not the LLM.
  */
 export const explainMoveIdea = (game, uci) => {
-  const facts = moveFacts(game, uci);
+  const facts = inspectUciMove(game, uci);
   if (!facts) return '';
 
   if (facts.isCastle) {

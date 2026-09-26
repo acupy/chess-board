@@ -87,10 +87,15 @@ function App() {
   const gameEndedRef = useRef(Boolean(initialSession?.gameOver));
   const sessionEngineEloRef = useRef(initialEngineElo);
   const positionRef = useRef(initialFen);
+  const movesRef = useRef(initialSession?.moves || []);
   const announcedDangersRef = useRef(new Set());
   useEffect(() => {
     positionRef.current = position;
   }, [position]);
+
+  useEffect(() => {
+    movesRef.current = moves;
+  }, [moves]);
 
   const syncDangerMarks = useCallback(
     (game, { announce = false } = {}) => {
@@ -202,10 +207,22 @@ function App() {
   );
 
   const playEngineReply = useCallback(
-    async (fenAfterPlayer) => {
+    async (fenAfterPlayer, context = {}) => {
       setStatus('I’m thinking…');
       const game = parseFEN(fenAfterPlayer);
-      const rawUci = await pickMove(fenAfterPlayer, sessionEngineEloRef.current);
+      const history = movesRef.current || [];
+      const lastOwnUci =
+        context.lastOwnUci ??
+        [...history].reverse().find((move) => move.by === 'engine')?.uci ??
+        null;
+      const lastOpponentUci =
+        context.lastOpponentUci ??
+        [...history].reverse().find((move) => move.by === 'player')?.uci ??
+        null;
+      const rawUci = await pickMove(fenAfterPlayer, sessionEngineEloRef.current, undefined, {
+        lastOpponentUci,
+        lastOwnUci,
+      });
       const uci = pickLegalEngineMove(game, rawUci);
       if (!uci) {
         setStatus('I couldn’t find a legal move.');
@@ -328,13 +345,13 @@ function App() {
           if (isInCheck(game.board, isWhiteToMove(game))) {
             setStatus('Check! I’m thinking…');
           }
-          await playEngineReply(fen);
+          await playEngineReply(fen, { lastOpponentUci: uci });
         }
       } catch (err) {
         setStatus(err.message || 'Something went wrong looking at that move.');
         try {
           const ended = checkAndFinish(game);
-          if (!ended) await playEngineReply(fen);
+          if (!ended) await playEngineReply(fen, { lastOpponentUci: uci });
         } catch {
           /* ignore */
         }
@@ -557,7 +574,7 @@ function App() {
                 </div>
                 <span className="elo-setting-hint">
                   {draftOpponentElo < MIN_UCI_ELO
-                    ? `Opponent target ~${draftOpponentElo}. Stockfish’s floor is ~${MIN_UCI_ELO}, so extra mistakes make it weaker.`
+                    ? `Opponent target ~${draftOpponentElo}. Chooses among Stockfish’s top moves like a human at that rating — missed tactics and believable mistakes, not random legal moves.`
                     : `Opponent plays ~${draftOpponentElo} Elo (Stockfish UCI_Elo).`}
                 </span>
               </label>

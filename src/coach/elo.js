@@ -27,8 +27,8 @@ export const MAX_ENGINE_ELO = 2200;
 
 /**
  * Opponent target slightly above the player.
- * Actual engine play is applied in `strengthOptionsForElo` — Stockfish
- * cannot natively go below ~1320, so ratings under that add extra mistakes.
+ * Below Stockfish's ~1320 floor, `pickHumanMove` selects among MultiPV
+ * candidates by eval loss and what a player of that rating would notice.
  */
 export const engineEloForPlayer = (playerElo) =>
   Math.max(MIN_ENGINE_ELO, Math.min(MAX_ENGINE_ELO, Math.round(playerElo + ENGINE_OFFSET)));
