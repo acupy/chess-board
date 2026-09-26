@@ -25,6 +25,10 @@ export const ENGINE_OFFSET = 80;
 export const MIN_ENGINE_ELO = 400;
 export const MAX_ENGINE_ELO = 2200;
 
-/** Opponent target slightly above the player. */
+/**
+ * Opponent target slightly above the player.
+ * Actual engine play is applied in `strengthOptionsForElo` — Stockfish
+ * cannot natively go below ~1320, so ratings under that add extra mistakes.
+ */
 export const engineEloForPlayer = (playerElo) =>
   Math.max(MIN_ENGINE_ELO, Math.min(MAX_ENGINE_ELO, Math.round(playerElo + ENGINE_OFFSET)));

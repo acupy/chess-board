@@ -35,6 +35,7 @@ import {
 } from './coach/voice';
 import { loadProfile, recordGameResult, setPlayerElo, loadSession, saveSession, clearSession } from './coach/storage';
 import { loadPreferences, updatePreferences, THEME_OPTIONS } from './coach/preferences';
+import { MIN_UCI_ELO } from './engine/strength';
 import { analyze, classifyMove, initEngine, pickMove } from './engine/stockfish';
 import { PIECE_STYLES } from './consts';
 
@@ -442,6 +443,8 @@ function App() {
     setStatus(`Elo set to ${next.elo}. Opponent strength is now ${nextEngine}.`);
   };
 
+  const draftOpponentElo = engineEloForPlayer(Number(eloDraft) || profile.elo);
+
   return (
     <div className="app-shell">
       <header>
@@ -553,7 +556,9 @@ function App() {
                   </button>
                 </div>
                 <span className="elo-setting-hint">
-                  Opponent plays ~{engineEloForPlayer(Number(eloDraft) || profile.elo)} Elo
+                  {draftOpponentElo < MIN_UCI_ELO
+                    ? `Opponent target ~${draftOpponentElo}. Stockfish’s floor is ~${MIN_UCI_ELO}, so extra mistakes make it weaker.`
+                    : `Opponent plays ~${draftOpponentElo} Elo (Stockfish UCI_Elo).`}
                 </span>
               </label>
               <label>

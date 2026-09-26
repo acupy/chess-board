@@ -3,12 +3,15 @@
  * Uses the lite single-threaded WASM build from /stockfish/.
  */
 
+import { listLegalUciMoves, parseFEN } from '../chess';
+import { chooseLimitedMove, strengthOptionsForElo } from './strength';
+
 const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js';
 
-const MIN_UCI_ELO = 1320;
-const MAX_UCI_ELO = 3190;
 const DEFAULT_MOVETIME_MS = 500;
 const ANALYZE_MOVETIME_MS = 400;
+
+export { strengthOptionsForElo } from './strength';
 
 let worker = null;
 let ready = false;
@@ -67,33 +70,20 @@ const ensureReady = async () => {
   if (!ready) await initEngine();
 };
 
-/**
- * Map target Elo to Stockfish strength options.
- * UCI_Elo is only valid roughly 1320–3190; below that use Skill Level.
- */
-export const strengthOptionsForElo = (elo) => {
-  const clamped = Math.max(100, Math.min(MAX_UCI_ELO, Math.round(elo)));
-  if (clamped >= MIN_UCI_ELO) {
-    return {
-      limitStrength: true,
-      uciElo: Math.min(MAX_UCI_ELO, clamped),
-      skillLevel: null,
-    };
-  }
-  // Map 100–1319 → Skill Level 0–10
-  const skill = Math.max(0, Math.min(10, Math.round(((clamped - 100) / (MIN_UCI_ELO - 100)) * 10)));
-  return { limitStrength: false, uciElo: null, skillLevel: skill };
-};
-
-const applyStrength = (elo) => {
+const applyStrength = async (elo) => {
   const opts = strengthOptionsForElo(elo);
   if (opts.limitStrength) {
     send('setoption name UCI_LimitStrength value true');
     send(`setoption name UCI_Elo value ${opts.uciElo}`);
+    send('setoption name Skill Level value 20');
   } else {
+    // Skill 0 ≈ 1320 Elo — the weakest native setting. Higher skill is stronger.
     send('setoption name UCI_LimitStrength value false');
     send(`setoption name Skill Level value ${opts.skillLevel}`);
   }
+  send('isready');
+  await waitFor((line) => line === 'readyok');
+  return opts;
 };
 
 const parseScore = (infoLine) => {
@@ -124,6 +114,8 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
     // Full strength for analysis
     send('setoption name UCI_LimitStrength value false');
     send('setoption name Skill Level value 20');
+    send('isready');
+    await waitFor((line) => line === 'readyok');
     send('ucinewgame');
     send(`position fen ${fen}`);
 
@@ -167,7 +159,7 @@ export const analyze = (fen, movetimeMs = ANALYZE_MOVETIME_MS) =>
 export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
   runExclusive(async () => {
     await ensureReady();
-    applyStrength(elo);
+    const opts = await applyStrength(elo);
     send('ucinewgame');
     send(`position fen ${fen}`);
 
@@ -189,7 +181,15 @@ export const pickMove = (fen, elo, movetimeMs = DEFAULT_MOVETIME_MS) =>
     });
 
     send(`go movetime ${movetimeMs}`);
-    return resultPromise;
+    const engineMove = await resultPromise;
+    if (!(opts.mistakeRate > 0)) return engineMove;
+
+    try {
+      const legal = listLegalUciMoves(parseFEN(fen));
+      return chooseLimitedMove(legal, engineMove, opts.mistakeRate);
+    } catch {
+      return engineMove;
+    }
   });
 
 /**

@@ -9,7 +9,7 @@ Built with **Vite**, **React 19**, and a small in-browser chess rules engine. Co
 ## Features
 
 - Click-to-move board with legal-move highlighting
-- **Coach mode**: Stockfish replies at ~your Elo + 80; games update your Elo (standard K-factor)
+- **Coach mode**: Stockfish replies at ~your Elo + 80 (UCI_Elo above 1320; Skill 0 plus extra weaker moves below that floor); games update your Elo (standard K-factor)
 - Move classification (excellent → blunder), friendly coach comments, move history with undo
 - Check / checkmate indicators (banner + king animations)
 - Themes and piece styles (persisted in `localStorage`)

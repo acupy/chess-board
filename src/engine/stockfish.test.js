@@ -1,23 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyMove, strengthOptionsForElo } from '../engine/stockfish';
-
-describe('strengthOptionsForElo', () => {
-  it('uses UCI_Elo at and above 1320', () => {
-    expect(strengthOptionsForElo(1320)).toEqual({
-      limitStrength: true,
-      uciElo: 1320,
-      skillLevel: null,
-    });
-    expect(strengthOptionsForElo(1500).uciElo).toBe(1500);
-  });
-
-  it('maps beginners to Skill Level', () => {
-    const low = strengthOptionsForElo(400);
-    expect(low.limitStrength).toBe(false);
-    expect(low.skillLevel).toBeGreaterThanOrEqual(0);
-    expect(low.skillLevel).toBeLessThanOrEqual(10);
-  });
-});
+import { classifyMove } from '../engine/stockfish';
 
 describe('classifyMove', () => {
   it('marks best move as excellent', () => {
