@@ -148,6 +148,15 @@ function ActionButton({ className, onClick, disabled, icon, label }) {
 }
 
 function HistoryList({ games, onReview, onDelete, onClose }) {
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const pendingGame = games.find((g) => g.id === pendingDeleteId) || null;
+
+  useEffect(() => {
+    if (pendingDeleteId && !games.some((g) => g.id === pendingDeleteId)) {
+      setPendingDeleteId(null);
+    }
+  }, [games, pendingDeleteId]);
+
   return (
     <div className="coach-panel coach-panel--history">
       <div className="coach-history-header">
@@ -156,7 +165,10 @@ function HistoryList({ games, onReview, onDelete, onClose }) {
           type="button"
           className="coach-hist-btn"
           aria-label="Close history"
-          onClick={onClose}
+          onClick={() => {
+            setPendingDeleteId(null);
+            onClose?.();
+          }}
         >
           <FontAwesomeIcon icon={faXmark} />
         </button>
@@ -171,6 +183,7 @@ function HistoryList({ games, onReview, onDelete, onClose }) {
                 type="button"
                 className="coach-history-main"
                 onClick={() => onReview(game)}
+                disabled={Boolean(pendingDeleteId)}
               >
                 <span className={`coach-history-result result-${game.result}`}>
                   {formatArchiveResult(game.result)}
@@ -194,13 +207,41 @@ function HistoryList({ games, onReview, onDelete, onClose }) {
                 className="coach-hist-btn"
                 aria-label="Delete game"
                 title="Delete"
-                onClick={() => onDelete(game.id)}
+                disabled={Boolean(pendingDeleteId) && pendingDeleteId !== game.id}
+                onClick={() => setPendingDeleteId(game.id)}
               >
                 <FontAwesomeIcon icon={faTrash} />
               </button>
             </li>
           ))}
         </ul>
+      )}
+      {pendingGame && (
+        <div className="coach-confirm" role="alertdialog" aria-labelledby="coach-hist-delete-label">
+          <p id="coach-hist-delete-label" className="coach-confirm-text">
+            Delete this game from history?
+          </p>
+          <div className="coach-actions">
+            <ActionButton
+              className="coach-btn danger"
+              onClick={() => {
+                const id = pendingDeleteId;
+                setPendingDeleteId(null);
+                onDelete?.(id);
+              }}
+              disabled={false}
+              icon={faTrash}
+              label="Delete"
+            />
+            <ActionButton
+              className="coach-btn"
+              onClick={() => setPendingDeleteId(null)}
+              disabled={false}
+              icon={faXmark}
+              label="Cancel"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
