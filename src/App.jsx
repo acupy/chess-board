@@ -641,7 +641,7 @@ function App() {
               )}
               {pieceStyle === 'symbols' && (
                 <span className="elo-setting-hint">
-                  Cartoon helmet, grenade, missile, crown, fort, and star.
+                  Cartoon helmet, grenade, plane, crossed guns, tank, and target.
                 </span>
               )}
               {pieceStyle === 'fantasy' && (
