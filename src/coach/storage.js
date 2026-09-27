@@ -85,6 +85,7 @@ export const loadSession = () => {
     if (!parsed || typeof parsed.fen !== 'string') return null;
     return {
       fen: parsed.fen,
+      startFen: typeof parsed.startFen === 'string' ? parsed.startFen : null,
       moves: Array.isArray(parsed.moves) ? parsed.moves : [],
       history: Array.isArray(parsed.history) ? parsed.history : [],
       verdict: parsed.verdict ?? null,

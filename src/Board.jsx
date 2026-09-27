@@ -45,6 +45,8 @@ const getFieldColour = (rankIndex, columnIndex) => {
  * @param {boolean} [props.coachMode] - when true, rules always on and only report moves via onPlayerMove
  * @param {[number, number]|null} [props.hintFrom]
  * @param {[number, number]|null} [props.hintTo]
+ * @param {[number, number]|null} [props.altFrom]
+ * @param {[number, number]|null} [props.altTo]
  * @param {{ coords: [number, number], kind: string }[]} [props.dangerMarks]
  */
 function Board({
@@ -58,6 +60,8 @@ function Board({
   coachMode = false,
   hintFrom = null,
   hintTo = null,
+  altFrom = null,
+  altTo = null,
   dangerMarks = [],
 }) {
   const rulesOn = coachMode || chessRulesEnforced;
@@ -314,6 +318,8 @@ function Board({
                 const isHintFrom =
                   hintFrom && hintFrom[0] === ridx && hintFrom[1] === cidx;
                 const isHintTo = hintTo && hintTo[0] === ridx && hintTo[1] === cidx;
+                const isAltFrom = altFrom && altFrom[0] === ridx && altFrom[1] === cidx;
+                const isAltTo = altTo && altTo[0] === ridx && altTo[1] === cidx;
                 const dangerKind = dangerBySquare.get(`${ridx},${cidx}`);
                 return (
                   <div
@@ -323,6 +329,8 @@ function Board({
                       isKingChecked ? 'check-field' : '',
                       isHintFrom ? 'hint-from-field' : '',
                       isHintTo ? 'hint-to-field' : '',
+                      isAltFrom ? 'alt-from-field' : '',
+                      isAltTo ? 'alt-to-field' : '',
                       dangerKind === 'hanging' ? 'danger-hanging-field' : '',
                       dangerKind === 'pin' ? 'danger-pin-field' : '',
                     ]

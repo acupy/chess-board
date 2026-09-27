@@ -85,11 +85,11 @@ export const coachGameOver = ({ result, playerElo, eloDelta = 0, reason }) => {
 
   if (result === 'win') {
     const how = reason === 'checkmate' ? 'Checkmate — you win!' : 'You win!';
-    return `${how} Great game.${delta} Ready for another when you are.`;
+    return `${how} Great game.${delta}`;
   }
 
   if (result === 'draw') {
-    return `Draw — a fair fight.${delta} Want to try again for a win?`;
+    return `Draw — a fair fight.${delta}`;
   }
 
   const how =
@@ -98,7 +98,156 @@ export const coachGameOver = ({ result, playerElo, eloDelta = 0, reason }) => {
       : reason === 'resignation'
         ? 'You resigned.'
         : 'You lost.';
-  return `${how} That’s okay — every game teaches something.${delta} Start a new game whenever you’re ready.`;
+  return `${how} That’s okay — every game teaches something.${delta}`;
+};
+
+const VERDICT_RANK = {
+  excellent: 0,
+  good: 1,
+  inaccuracy: 2,
+  mistake: 3,
+  blunder: 4,
+};
+
+/**
+ * Aggregate player-move quality for an end-of-game summary.
+ */
+export const summarizePlayerMoves = (moves = []) => {
+  const playerMoves = moves.filter((m) => m?.by === 'player' && m.verdict);
+  const counts = {
+    excellent: 0,
+    good: 0,
+    inaccuracy: 0,
+    mistake: 0,
+    blunder: 0,
+  };
+  for (const move of playerMoves) {
+    if (counts[move.verdict] != null) counts[move.verdict] += 1;
+  }
+
+  const strong = counts.excellent + counts.good;
+  const slips = counts.mistake + counts.blunder;
+
+  let best = null;
+  let worst = null;
+  for (const move of playerMoves) {
+    const rank = VERDICT_RANK[move.verdict];
+    if (rank == null) continue;
+
+    if (!best || rank < VERDICT_RANK[best.verdict]) {
+      best = move;
+    } else if (rank === VERDICT_RANK[best.verdict] && (move.lossCp ?? 9999) < (best.lossCp ?? 9999)) {
+      best = move;
+    }
+
+    if (!worst || rank > VERDICT_RANK[worst.verdict]) {
+      worst = move;
+    } else if (rank === VERDICT_RANK[worst.verdict] && (move.lossCp ?? 0) > (worst.lossCp ?? 0)) {
+      worst = move;
+    }
+  }
+
+  return { counts, strong, slips, total: playerMoves.length, best, worst };
+};
+
+/**
+ * End-of-game coach line: result + what went well / what didn’t.
+ */
+export const coachGameSummary = ({
+  result,
+  playerElo,
+  eloDelta = 0,
+  reason,
+  moves = [],
+}) => {
+  const closing = coachGameOver({ result, playerElo, eloDelta, reason });
+  const { counts, strong, slips, total } = summarizePlayerMoves(moves);
+
+  if (total === 0) {
+    return `${closing} Open History anytime to review past games.`;
+  }
+
+  const parts = [closing];
+
+  if (strong > 0 && slips === 0) {
+    parts.push(
+      ` You played ${strong} strong move${strong === 1 ? '' : 's'} with no big slips — nice consistency.`
+    );
+  } else if (strong > 0) {
+    parts.push(
+      ` You had ${strong} strong move${strong === 1 ? '' : 's'} and ${slips} real slip${slips === 1 ? '' : 's'}.`
+    );
+  } else if (slips > 0) {
+    parts.push(
+      ` There were ${slips} tough moment${slips === 1 ? '' : 's'} this game — worth a quick review.`
+    );
+  }
+
+  if (counts.excellent > 0) {
+    parts.push(
+      ` Highlight: ${counts.excellent} excellent find${counts.excellent === 1 ? '' : 's'}.`
+    );
+  }
+
+  parts.push(' Open History to step through the game with me.');
+  return parts.join('');
+};
+
+/**
+ * Review-mode comment for a single ply (player or engine).
+ * Slips (!! not used here — ?? / ? / ?!) lead with the better move like a live hint.
+ */
+export const coachReviewMove = ({ gameBefore, move }) => {
+  if (!move) {
+    return 'Start of the game. Step forward to walk through the moves.';
+  }
+
+  if (move.by === 'engine') {
+    const played = describeUciMove(gameBefore, move.uci) || move.uci;
+    return `I played ${played}. Step forward when you’re ready.`;
+  }
+
+  if (!gameBefore) {
+    return 'Looking back — step through to see what changed.';
+  }
+
+  const played = describeUciMove(gameBefore, move.uci) || move.uci;
+  const verdict = move.verdict || 'good';
+  const bestUci = move.bestUci;
+  const isSlip =
+    verdict === 'inaccuracy' || verdict === 'mistake' || verdict === 'blunder';
+  const hasBetter = Boolean(bestUci && bestUci !== move.uci);
+
+  if (isSlip && hasBetter) {
+    const best = describeUciMove(gameBefore, bestUci) || bestUci;
+    const whyBest = explainMoveIdea(gameBefore, bestUci);
+    const label =
+      verdict === 'blunder' ? 'blunder' : verdict === 'mistake' ? 'mistake' : 'inaccuracy';
+    const why = whyBest ? ` ${whyBest}` : '';
+    return `You played ${played} — that was a ${label}.${formatLoss(move.lossCp || 0)} Better would have been ${best}.${why}`;
+  }
+
+  if (isSlip && !hasBetter) {
+    const label =
+      verdict === 'blunder' ? 'blunder' : verdict === 'mistake' ? 'mistake' : 'inaccuracy';
+    return `You played ${played} — that was a ${label}.${formatLoss(move.lossCp || 0)} I’m checking what would have been stronger…`;
+  }
+
+  if (hasBetter) {
+    const best = describeUciMove(gameBefore, bestUci) || bestUci;
+    const whyBest = explainMoveIdea(gameBefore, bestUci);
+    const why = whyBest ? ` ${whyBest}` : '';
+    return `You played ${played}. A stronger idea was ${best}.${why}`;
+  }
+
+  const body = coachOnMove({
+    gameBefore,
+    playedUci: move.uci,
+    bestUci,
+    verdict,
+    lossCp: move.lossCp || 0,
+  });
+  return body;
 };
 
 export const coachWelcome = () =>
